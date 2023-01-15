@@ -101,8 +101,10 @@ namespace src3 {
 
 				// render
 				srcRenderer.beginSwapChainRenderPass(commandBuffer);
+
 				simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
+				
 				srcRenderer.endSwapChainRenderPass(commandBuffer);
 				srcRenderer.endFrame();
 			}

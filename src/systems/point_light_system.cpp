@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <array>
+#include <map>
 
 namespace src3 {
 
@@ -53,6 +54,7 @@ namespace src3 {
 
 		PipelineConfigInfo pipelineConfig{};
 		SrcPipeline::defaultPipelineConfigInfo(pipelineConfig);
+		SrcPipeline::enableAlphaBlending(pipelineConfig);
 		pipelineConfig.attributeDescriptions.clear();
 		pipelineConfig.bindingDescriptors.clear();
 		pipelineConfig.renderPass = renderPass;
@@ -88,15 +90,25 @@ namespace src3 {
 
 	void PointLightSystem::render(FrameInfo& frameInfo)
 	{
+		// sort lights
+		std::map<float,SrcGameObject::id_t> sorted;
+		for (auto& kv : frameInfo.gameObjects) {
+			auto& obj = kv.second;
+			if (obj.pointLight == nullptr) continue;
+
+			auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+			float disSquared = glm::dot(offset,offset);
+			sorted[disSquared] = obj.getId();
+		}
+
 		srcPipeline->bind(frameInfo.commandBuffer);
 
 		auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
 
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-		for (auto& kv : frameInfo.gameObjects) {
-			auto& obj = kv.second;
-			if (obj.pointLight == nullptr) continue;
+		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
+			auto& obj = frameInfo.gameObjects.at(it->second);
 
 			PointLightPushConstants push{};
 			push.position = glm::vec4(obj.transform.translation, 1.f);
