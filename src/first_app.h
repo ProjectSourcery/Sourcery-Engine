@@ -1,10 +1,11 @@
 #pragma once
 
-#include "src3_window.h"
-#include "src3_device.h"
-#include "src3_game_object.h"
-#include "src3_renderer.h"
-#include "buffer/uniform/src3_descriptors.h"
+#include "core/window/src3_window.h"
+#include "core/device/src3_device.h"
+#include "game/gameobject/src3_game_object.h"
+#include "game/ecs/src3_ecs.h"
+#include "render/renderer/src3_renderer.h"
+#include "core/buffer/uniform/src3_descriptors.h"
 
 #include <memory>
 #include <vector>
@@ -31,6 +32,6 @@ namespace src3 {
 
 		std::unique_ptr<SrcDescriptorPool> globalPool{};
 		std::vector<std::unique_ptr<SrcDescriptorPool>> framePools{};
-		SrcGameObjectManager gameObjectManager{srcDevice};
+		EntManager ecs{};
 	};
 }

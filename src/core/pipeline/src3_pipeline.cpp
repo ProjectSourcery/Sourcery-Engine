@@ -1,5 +1,5 @@
 #include "src3_pipeline.h"
-#include "src3_model.h"
+#include "render/model/src3_model.h"
 
 #include <fstream>
 #include <stdexcept>

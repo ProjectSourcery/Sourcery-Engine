@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src3_device.h"
-#include "buffer/src3_buffer.h"
+#include "core/device/src3_device.h"
+#include "core/buffer/src3_buffer.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

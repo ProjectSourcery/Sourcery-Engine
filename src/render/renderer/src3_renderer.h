@@ -1,8 +1,8 @@
 #pragma once
 
-#include "src3_device.h"
-#include "src3_window.h"
-#include "src3_swap_chain.h"
+#include "core/device/src3_device.h"
+#include "core/window/src3_window.h"
+#include "core/swapchain/src3_swap_chain.h"
 
 #include <memory>
 #include <vector>

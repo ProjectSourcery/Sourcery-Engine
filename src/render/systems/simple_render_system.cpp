@@ -17,7 +17,7 @@ namespace src3 {
 		glm::mat4 normalMatrix{ 1.f };
 	};
 
-	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device} {
+	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, EntManager &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device}, ents{ecs.allOf<TransformComponent,ModelComponent,TextureComponent>()} {
 		createPipelineLayout(globalSetLayout);
 		createPipeline(renderPass);
 	}
@@ -79,36 +79,58 @@ namespace src3 {
 
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
-		for (auto& kv : frameInfo.gameObjects) {
-			auto& obj = kv.second;
-			if (obj.model == nullptr) continue;
+		int index = 0;
+		for (auto ent : ents) {
+			auto& transform = ent.get<TransformComponent>();
+			TransformUboData& transformData = transformUbo.get(frameInfo.frameIndex,index);
+			transformData.modelMatrix = transform.mat4();
+			transformData.normalMatrix = transform.normalMatrix();
 
-			auto bufferInfo = obj.getBufferInfo(frameInfo.frameIndex);
-			auto imageInfo = obj.diffuseMap->getImageInfo();
-			VkDescriptorSet gameObjectDescriptorSet;
-			SrcDescriptorWriter(*renderSystemLayout,frameInfo.frameDescriptorPool)
-				.writeBuffer(0,&bufferInfo)
-				.writeImage(1,&imageInfo)
-				.build(gameObjectDescriptorSet);
+			index += 1;
+		}
+		transformUbo.flushRegion(frameInfo.frameIndex);
 
+		index = 0;
+		for (auto ent:ents){
+			auto& texture = ent.get<TextureComponent>();
+			TextureUboData& textureData = textureUbo.get(frameInfo.frameIndex,index);
+			textureData.diffuseMap = texture.texture;
+			
+			index += 1;
+		}
+		textureUbo.flushRegion(frameInfo.frameIndex);
+
+		index = 0;
+		for (auto ent: ents) {
+			auto& transform = ent.get<TransformComponent>();
+			auto& model = ent.get<ModelComponent>();
+
+			auto bufferInfo = transformUbo.bufferInfoForElement(frameInfo.frameIndex,index);
+			auto imageInfo = textureUbo.get(frameInfo.frameIndex).diffuseMap->getImageInfo();
+			VkDescriptorSet transformDescriptorSet;
+			SrcDescriptorWriter(*renderSystemLayout, frameInfo.frameDescriptorPool)
+				.writeBuffer(0, &bufferInfo)
+				.writeImage(1,&imageInfo) // TODO: Fix this
+				.build(transformDescriptorSet);
 			vkCmdBindDescriptorSets(
 				frameInfo.commandBuffer,
 				VK_PIPELINE_BIND_POINT_GRAPHICS,
 				pipelineLayout,
-				1,
-				1,
-				&gameObjectDescriptorSet,
+				1,  // starting set (0 is the globalDescriptorSet, 1 is the set specific to this system)
+				1,  // binding 1 more set
+				&transformDescriptorSet,
 				0,
-				nullptr
-			);
+				nullptr);
 
 			SimplePushConstantData push{};
-			push.modelMatrix = obj.transform.mat4();
-			push.normalMatrix = obj.transform.normalMatrix();
+			push.modelMatrix = transform.mat4();
+			push.normalMatrix = transform.normalMatrix();
 
 			vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
-			obj.model->bind(frameInfo.commandBuffer);
-			obj.model->draw(frameInfo.commandBuffer);
+			model.model->bind(frameInfo.commandBuffer);
+			model.model->draw(frameInfo.commandBuffer);
+
+			index += 1;
 		}
 	}
 }

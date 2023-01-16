@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src3_device.h"
+#include "core/device/src3_device.h"
 
 #include <string>
 #include <vector>

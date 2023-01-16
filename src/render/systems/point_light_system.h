@@ -1,14 +1,14 @@
 #pragma once
 
-#include "src3_camera.h"
-#include "src3_pipeline.h"
-#include "src3_device.h"
-#include "src3_game_object.h"
-#include "src3_frame_info.h"
+#include "core/swapchain/src3_swap_chain.h"
+#include "core/device/src3_device.h"
+#include "core/pipeline/src3_pipeline.h"
+#include "game/camera/src3_camera.h"
+#include "game/gameobject/src3_game_object.h"
+#include "util/src3_frame_info.h"
 
 #include <memory>
 #include <vector>
-#include "src3_swap_chain.h"
 
 namespace src3 {
 	class PointLightSystem {

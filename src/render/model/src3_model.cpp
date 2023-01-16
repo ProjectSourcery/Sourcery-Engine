@@ -1,5 +1,5 @@
 #include "src3_model.h"
-#include "src3_utils.h"
+#include "util/src3_utils.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader.h>
@@ -52,7 +52,7 @@ namespace src3 {
 
 		SrcBuffer stagingBuffer{
 			srcDevice,
-			vertexSize, vertexCount,
+			vertexSize*vertexCount,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		};
@@ -62,7 +62,7 @@ namespace src3 {
 
 		vertexBuffer = std::make_unique<SrcBuffer>(
 			srcDevice,
-			vertexSize, vertexCount,
+			vertexSize*vertexCount,
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);
@@ -84,8 +84,7 @@ namespace src3 {
 
 		SrcBuffer stagingBuffer{
 			srcDevice,
-			indexSize,
-			indexCount,
+			indexSize*indexCount,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 		};
@@ -95,7 +94,7 @@ namespace src3 {
 
 		indexBuffer = std::make_unique<SrcBuffer>(
 			srcDevice,
-			indexSize, indexCount,
+			indexSize*indexCount,
 			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 		);

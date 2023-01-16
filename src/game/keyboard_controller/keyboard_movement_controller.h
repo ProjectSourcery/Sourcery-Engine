@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src3_game_object.h"
-#include "src3_window.h"
+#include "game/gameobject/src3_game_object.h"
+#include "core/window/src3_window.h"
 
 namespace src3 {
 	class KeyboardMovementController {
@@ -19,7 +19,7 @@ namespace src3 {
             int lookDown = GLFW_KEY_DOWN;
         };
 
-        void moveInPlaneXZ(GLFWwindow* window, float dt, SrcGameObject& gameObject);
+        void moveInPlaneXZ(GLFWwindow* window, float dt, TransformComponent& viewerTransform);
 
         KeyMappings keys{};
         float moveSpeed{3.f};

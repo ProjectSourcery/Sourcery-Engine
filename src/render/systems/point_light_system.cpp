@@ -70,18 +70,18 @@ namespace src3 {
 	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
 		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, {0.f, -1.f, 0.f});
 		int lightIndex = 0;
-		for (auto& kv : frameInfo.gameObjects) {
-			auto& obj = kv.second;
-			if (obj.pointLight == nullptr) continue;
-
+		auto pointLights = frameInfo.ecs.allOf<PointLightComponent>();
+		for (auto& light:pointLights) {
 			assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
 
+			auto& lightTransform = light.get<TransformComponent>();
+
 			// update light position
-			obj.transform.translation = glm::vec3(rotateLight * glm::vec4(obj.transform.translation, 1.f));
+			lightTransform.translation = glm::vec3(rotateLight * glm::vec4(lightTransform.translation, 1.f));
 
 			// copy light to ubo
-			ubo.pointLights[lightIndex].position = glm::vec4(obj.transform.translation, 1.f);
-			ubo.pointLights[lightIndex].color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
+			ubo.pointLights[lightIndex].position = glm::vec4(lightTransform.translation, 1.f);
+			ubo.pointLights[lightIndex].color = glm::vec4(light.get<ColorComponent>().color, light.get<PointLightComponent>().lightIntensity);
 
 			lightIndex += 1;
 		}
@@ -91,14 +91,14 @@ namespace src3 {
 	void PointLightSystem::render(FrameInfo& frameInfo)
 	{
 		// sort lights
-		std::map<float,SrcGameObject::id_t> sorted;
-		for (auto& kv : frameInfo.gameObjects) {
-			auto& obj = kv.second;
-			if (obj.pointLight == nullptr) continue;
+		std::map<float,EntId> sorted;
+		auto pointLights = frameInfo.ecs.allOf<PointLightComponent>();
+		for (auto lightId: pointLights.ids()) {
+			auto& lightTransform = frameInfo.ecs.get<TransformComponent>(lightId);
 
-			auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+			auto offset = frameInfo.camera.getPosition() - lightTransform.translation;
 			float disSquared = glm::dot(offset,offset);
-			sorted[disSquared] = obj.getId();
+			sorted[disSquared] = lightId;
 		}
 
 		srcPipeline->bind(frameInfo.commandBuffer);
@@ -106,12 +106,15 @@ namespace src3 {
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
 		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
-			auto& obj = frameInfo.gameObjects.at(it->second);
+			auto lightId = it->second;
+			auto& lightTransform = frameInfo.ecs.get<TransformComponent>(lightId);
+    		auto& lightColor = frameInfo.ecs.get<ColorComponent>(lightId);
+    		auto& lightComp = frameInfo.ecs.get<PointLightComponent>(lightId);
 
 			PointLightPushConstants push{};
-			push.position = glm::vec4(obj.transform.translation, 1.f);
-			push.color = glm::vec4(obj.color, obj.pointLight->lightIntensity);
-			push.radius = obj.transform.scale.x;
+			push.position = glm::vec4(lightTransform.translation, 1.f);
+			push.color = glm::vec4(lightColor.color, lightComp.lightIntensity);
+			push.radius = lightTransform.scale.x;
 
 			vkCmdPushConstants(
 				frameInfo.commandBuffer,

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src3_window.h"
+#include "core/window/src3_window.h"
 
 // std lib headers
 #include <string>
