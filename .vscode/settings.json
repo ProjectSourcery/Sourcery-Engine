@@ -1,4 +1,14 @@
 {
     "glsllint.glslangValidatorArgs": "-V",
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "files.associations": {
+        "deque": "cpp",
+        "map": "cpp",
+        "type_traits": "cpp",
+        "unordered_map": "cpp",
+        "xhash": "cpp",
+        "xlocmon": "cpp",
+        "xmemory0": "cpp",
+        "xtree": "cpp"
+    }
 }

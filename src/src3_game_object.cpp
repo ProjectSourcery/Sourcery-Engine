@@ -1,5 +1,7 @@
 #include "src3_game_object.h"
 
+#include <numeric>
+
 namespace src3 {
 	glm::mat4 TransformComponent::mat4() {
 		const float c3 = glm::cos(rotation.z);
@@ -57,12 +59,51 @@ namespace src3 {
 			}
 		};
 	}
-    SrcGameObject SrcGameObject::makePointLight(float intensity, float radius, glm::vec3 color) {
-		SrcGameObject gameObj = SrcGameObject::createGameObject();
+    SrcGameObjectManager::SrcGameObjectManager(SrcDevice &device)
+    {
+		int alignment = std::lcm(
+			device.properties.limits.nonCoherentAtomSize,
+			device.properties.limits.minUniformBufferOffsetAlignment
+		);
+
+		for (int i = 0; i < uboBuffers.size(); i++) {
+			uboBuffers[i] = std::make_unique<SrcBuffer>(
+				device,
+				sizeof(GameObjectBufferData),
+				SrcGameObjectManager::MAX_GAME_OBJECTS,
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+				alignment
+			);
+			uboBuffers[i]->map();
+		}
+
+		textureDefault = SrcTexture::createTextureFromFile(device,"../textures/missing.png");
+    }
+    SrcGameObject &SrcGameObjectManager::makePointLight(float intensity, float radius, glm::vec3 color)
+    {
+        auto& gameObj = createGameObject();
 		gameObj.color = color;
 		gameObj.transform.scale.x = radius;
 		gameObj.pointLight = std::make_unique<PointLightComponent>();
 		gameObj.pointLight->lightIntensity = intensity;
 		return gameObj;
+    }
+
+	void SrcGameObjectManager::updateBuffer(int frameIndex) {
+		for (auto& kv : gameObjects) {
+			auto& obj = kv.second;
+			GameObjectBufferData data{};
+			data.modelMatrix = obj.transform.mat4();
+			data.normalMatrix = obj.transform.normalMatrix();
+			uboBuffers[frameIndex]->writeToIndex(&data,kv.first);
+		}
+		uboBuffers[frameIndex]->flush();
 	}
+
+	VkDescriptorBufferInfo SrcGameObject::getBufferInfo(int frameIndex) {
+		return gameObjectManager.getBufferInfoForGameObject(frameIndex,id);
+	}
+
+	SrcGameObject::SrcGameObject(id_t objId,const SrcGameObjectManager& manager): id{objId}, gameObjectManager{manager} {}
 }

@@ -4,7 +4,7 @@
 #include "src3_device.h"
 #include "src3_game_object.h"
 #include "src3_renderer.h"
-#include "src3_descriptors.h"
+#include "buffer/uniform/src3_descriptors.h"
 
 #include <memory>
 #include <vector>
@@ -30,7 +30,7 @@ namespace src3 {
 		SrcRenderer srcRenderer{srcWindow, srcDevice};
 
 		std::unique_ptr<SrcDescriptorPool> globalPool{};
-		std::unique_ptr<SrcSwapChain> srcSwapChain;
-		SrcGameObject::Map gameObjects;
+		std::vector<std::unique_ptr<SrcDescriptorPool>> framePools{};
+		SrcGameObjectManager gameObjectManager{srcDevice};
 	};
 }

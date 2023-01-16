@@ -33,7 +33,15 @@ namespace src3 {
 		pushConstRange.offset = 0;
 		pushConstRange.size = sizeof(SimplePushConstantData);
 
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout };
+		renderSystemLayout = SrcDescriptorSetLayout::Builder(srcDevice)
+			.addBinding(
+				0,
+				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(1,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
+
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{ globalSetLayout, renderSystemLayout->getDescriptorSetLayout() };
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -74,6 +82,26 @@ namespace src3 {
 		for (auto& kv : frameInfo.gameObjects) {
 			auto& obj = kv.second;
 			if (obj.model == nullptr) continue;
+
+			auto bufferInfo = obj.getBufferInfo(frameInfo.frameIndex);
+			auto imageInfo = obj.diffuseMap->getImageInfo();
+			VkDescriptorSet gameObjectDescriptorSet;
+			SrcDescriptorWriter(*renderSystemLayout,frameInfo.frameDescriptorPool)
+				.writeBuffer(0,&bufferInfo)
+				.writeImage(1,&imageInfo)
+				.build(gameObjectDescriptorSet);
+
+			vkCmdBindDescriptorSets(
+				frameInfo.commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				pipelineLayout,
+				1,
+				1,
+				&gameObjectDescriptorSet,
+				0,
+				nullptr
+			);
+
 			SimplePushConstantData push{};
 			push.modelMatrix = obj.transform.mat4();
 			push.normalMatrix = obj.transform.normalMatrix();

@@ -25,8 +25,9 @@ namespace src3 {
 		void createPipeline(VkRenderPass renderPass);
 		
 		SrcDevice& srcDevice;
-		std::unique_ptr<SrcSwapChain> srcSwapChain;
 		std::unique_ptr<SrcPipeline> srcPipeline;
 		VkPipelineLayout pipelineLayout;
+
+		std::unique_ptr<SrcDescriptorSetLayout> renderSystemLayout;
 	};
 }

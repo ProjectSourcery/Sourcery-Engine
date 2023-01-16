@@ -2,7 +2,7 @@
 
 #include "keyboard_movement_controller.h"
 #include "src3_camera.h"
-#include "src3_buffer.h"
+#include "buffer/src3_buffer.h"
 #include "systems/simple_render_system.h"
 #include "systems/point_light_system.h"
 
@@ -26,6 +26,17 @@ namespace src3 {
 			.setMaxSets(SrcSwapChain::MAX_FRAMES_IN_FLIGHT)
 			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, SrcSwapChain::MAX_FRAMES_IN_FLIGHT)
 			.build();
+
+		framePools.resize(SrcSwapChain::MAX_FRAMES_IN_FLIGHT);
+		auto framePoolBuilder = SrcDescriptorPool::Builder(srcDevice)
+			.setMaxSets(1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1000)
+			.setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
+		for (int i = 0; i < framePools.size(); i++) {
+			framePools[i] = framePoolBuilder.build();
+		}
+
 		loadGameObjects();
 	}
 
@@ -61,7 +72,7 @@ namespace src3 {
         SrcCamera camera{};
         camera.setViewTarget(glm::vec3{ -1.f,-2.f,-2.f }, glm::vec3{ 0.f,0.f,2.5f });
 
-        auto viewerObject = SrcGameObject::createGameObject();
+        auto& viewerObject = gameObjectManager.createGameObject();
 		viewerObject.transform.translation.z = -2.5f;
         KeyboardMovementController cameraController{};
 
@@ -82,12 +93,14 @@ namespace src3 {
 
 			if (auto commandBuffer = srcRenderer.beginFrame()) {
 				int frameIndex = srcRenderer.getFrameIndex();
+				framePools[frameIndex]->resetPool();
 				FrameInfo frameInfo{
 					frameIndex,
 					frameTime,
 					commandBuffer,camera,
 					globalDescriptorSets[frameIndex],
-					gameObjects
+					*framePools[frameIndex],
+					gameObjectManager.gameObjects
 				};
 
 				// update
@@ -98,6 +111,8 @@ namespace src3 {
 				pointLightSystem.update(frameInfo,ubo);
 				uboBuffers[frameIndex]->writeToBuffer(&ubo);
 				uboBuffers[frameIndex]->flush();
+
+				gameObjectManager.updateBuffer(frameIndex);
 
 				// render
 				srcRenderer.beginSwapChainRenderPass(commandBuffer);
@@ -117,25 +132,24 @@ namespace src3 {
 	{
         std::shared_ptr<SrcModel> srcModel = SrcModel::createModelFromFile(srcDevice, "models/flat_vase.obj");
 
-        auto fVase = SrcGameObject::createGameObject();
+        auto& fVase = gameObjectManager.createGameObject();
 		fVase.model = srcModel;
 		fVase.transform.translation = { -.5f, .5f, 0.f };
 		fVase.transform.scale = {3.f,3.f,3.f};
-        gameObjects.emplace(fVase.getId(), std::move(fVase));
 
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
-		auto sVase = SrcGameObject::createGameObject();
+		auto& sVase = gameObjectManager.createGameObject();
 		sVase.model = srcModel;
 		sVase.transform.translation = { .5f, .5f, 0.f };
 		sVase.transform.scale = { 3.f,1.5f,3.f };
-		gameObjects.emplace(sVase.getId(), std::move(sVase));
 
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/quad.obj");
-		auto floor = SrcGameObject::createGameObject();
+		std::shared_ptr<SrcTexture> marbleTexture = SrcTexture::createTextureFromFile(srcDevice, "../textures/missing.png");
+		auto& floor = gameObjectManager.createGameObject();
 		floor.model = srcModel;
+		floor.diffuseMap = marbleTexture;
 		floor.transform.translation = { 0.f, .5f, 0.f };
 		floor.transform.scale = { 3.f,1.f,3.f };
-		gameObjects.emplace(floor.getId(), std::move(floor));
 
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},
@@ -147,14 +161,13 @@ namespace src3 {
 		};
 
 		for (int i = 0; i < lightColors.size(); i++) {
-			auto pointLight = SrcGameObject::makePointLight(0.2f);
+			auto& pointLight = gameObjectManager.makePointLight(0.2f);
 			pointLight.color = lightColors[i];
 			auto rotateLight = glm::rotate(
 				glm::mat4(1.f),
 				(i * glm::two_pi<float>()) / lightColors.size(),
 				{0.f, -1.f, 0.f});
 			pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
-			gameObjects.emplace(pointLight.getId(), std::move(pointLight));
 		}
 	}
 
