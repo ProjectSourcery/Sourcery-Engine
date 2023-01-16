@@ -5,7 +5,8 @@ The first ever engine that **will** be based upon the [LuaU language](https://lu
 ## TODO
 
 - [x] Textures
-- [ ] Organize the project
+- [ ] ECS (Entity Component System)
+- [x] Organize the project
 - [ ] Implement LuaU into the engine
 - [ ] Optimalizations
 
