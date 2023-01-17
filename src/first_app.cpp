@@ -117,27 +117,21 @@ namespace src3 {
         std::shared_ptr<SrcModel> srcModel = SrcModel::createModelFromFile(srcDevice, "models/flat_vase.obj");
 
         auto fVase = ecs.createEnt();
-		ecs.add<TransformComponent,ModelComponent>(fVase);
-		auto& flatVaseTransform = ecs.get<TransformComponent>(fVase);
-  		auto& flatVaseModel = ecs.get<ModelComponent>(fVase);
+		auto [flatVaseTransform, flatVaseModel] = ecs.add<TransformComponent,ModelComponent>(fVase);
 		flatVaseModel.model = srcModel;
 		flatVaseTransform.translation = { -.5f, .5f, 0.f };
 		flatVaseTransform.scale = {3.f,3.f,3.f};
 
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
 		auto smothVase = ecs.createEnt();
-		ecs.add<TransformComponent, ModelComponent>(smothVase);
-		auto& smothVaseTransform = ecs.get<TransformComponent>(smothVase);
-		auto& smothVaseModel = ecs.get<ModelComponent>(smothVase);
+		auto [smothVaseTransform,smothVaseModel] = ecs.add<TransformComponent, ModelComponent>(smothVase);
 		smothVaseTransform.translation = {.5f, .5f, 0.f};
 		smothVaseTransform.scale = {3.f, 1.5f, 3.f};
 		smothVaseModel.model = srcModel;
 
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/quad.obj");
 		auto floor = ecs.createEnt();
-		ecs.add<TransformComponent, ModelComponent>(floor);
-		auto& floorTransform = ecs.get<TransformComponent>(floor);
-		auto& floorModel = ecs.get<ModelComponent>(floor);
+		auto [floorTransform,floorModel] = ecs.add<TransformComponent, ModelComponent>(floor);
 		floorTransform.translation = {0.f, .5f, 0.f};
 		floorTransform.scale = {3.f, 1.f, 3.f};
 		floorModel.model = srcModel;

@@ -9,6 +9,8 @@ The first ever engine that **will** be based upon the [LuaU language](https://lu
 - [x] Organize the project
 - [ ] Implement LuaU into the engine
 - [ ] Optimalizations
+- [ ] Multisampling
+- [ ] Imgui?
 
 ## Building
 

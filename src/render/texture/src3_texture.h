@@ -33,6 +33,8 @@ class SrcTexture {
   VkImageLayout getImageLayout() const { return mTextureLayout; }
   VkExtent3D getExtent() const { return mExtent; }
   VkFormat getFormat() const { return mFormat; }
+  VkImageUsageFlags getImageUsageFlags() const { return mImageUsageFlags; }
+  VkSampleCountFlagBits getSampleCountBits() const { return mTextureSampleCountFlagBits; }
 
   void updateDescriptor();
   void transitionLayout(
@@ -58,6 +60,8 @@ class SrcTexture {
   uint32_t mMipLevels{1};
   uint32_t mLayerCount{1};
   VkExtent3D mExtent{};
+  VkImageUsageFlags mImageUsageFlags;
+  VkSampleCountFlagBits mTextureSampleCountFlagBits;
 };
 
 }

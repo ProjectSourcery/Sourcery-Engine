@@ -167,6 +167,9 @@ void SrcTexture::createTextureImage(const std::string &filepath) {
   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
+  mImageUsageFlags = imageInfo.usage;
+  mTextureSampleCountFlagBits = imageInfo.samples;
+
   mDevice.createImageWithInfo(
       imageInfo,
       VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,

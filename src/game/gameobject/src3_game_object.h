@@ -2,6 +2,7 @@
 
 #include "render/model/src3_model.h"
 #include "render/texture/src3_texture.h"
+#include "render/systems/simple_render_system.h"
 #include "game/ecs/src3_ecs.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -31,9 +32,6 @@ namespace src3 {
 
 	struct ModelComponent {
 		std::shared_ptr<SrcModel> model{};
-	};
-
-	struct TextureComponent {
 		std::shared_ptr<SrcTexture> texture;
 	};
 

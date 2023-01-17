@@ -56,14 +56,14 @@ class EntQuery__internal {
   friend class EntManager;
   friend class EntQuery;
 };
-}  
+} 
 
 namespace std {
 template <>
 struct hash<src3::EntQuery__internal> {
   size_t operator()(src3::EntQuery__internal const &query) const { return query.hashValue; }
 };
-} 
+}  
 
 namespace src3 {
 

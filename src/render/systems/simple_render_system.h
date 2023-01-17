@@ -13,6 +13,7 @@
 #include <vector>
 
 namespace src3 {
+
 	struct TransformUboData {
 		glm::mat4 modelMatrix{1.f};
 		glm::mat4 normalMatrix{1.f};
@@ -30,6 +31,8 @@ namespace src3 {
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
 		SimpleRenderSystem& operator=(const SimpleRenderSystem&) = delete;
 
+		std::unique_ptr<SrcTexture> getDefaultTexture() { return std::make_unique<SrcTexture>(srcDevice,"../textures/missing.png"); };
+
 		void renderGameObjects(FrameInfo& frameInfo);
 	private:
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
@@ -44,6 +47,10 @@ namespace src3 {
 
 		std::unique_ptr<SrcDescriptorSetLayout> renderSystemLayout;
 
+		std::unique_ptr<SrcTexture> defaultTexture = std::make_unique<SrcTexture>(srcDevice,"../textures/missing.png");
+
 		EntQueryResult ents;
+
+		friend struct TextureUboData;
 	};
 }

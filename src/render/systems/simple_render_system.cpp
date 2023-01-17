@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <cassert>
 #include <array>
+#include <iostream>
 
 namespace src3 {
 
@@ -17,7 +18,7 @@ namespace src3 {
 		glm::mat4 normalMatrix{ 1.f };
 	};
 
-	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, EntManager &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device}, ents{ecs.allOf<TransformComponent,ModelComponent,TextureComponent>()} {
+	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, EntManager &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device}, ents{ecs.allOf<TransformComponent,ModelComponent>()} {
 		createPipelineLayout(globalSetLayout);
 		createPipeline(renderPass);
 	}
@@ -80,8 +81,7 @@ namespace src3 {
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
 		int index = 0;
-		for (auto ent : ents) {
-			auto& transform = ent.get<TransformComponent>();
+		for (auto [transform, entId] : ents.iterate<TransformComponent>()) {
 			TransformUboData& transformData = transformUbo.get(frameInfo.frameIndex,index);
 			transformData.modelMatrix = transform.mat4();
 			transformData.normalMatrix = transform.normalMatrix();
@@ -91,20 +91,21 @@ namespace src3 {
 		transformUbo.flushRegion(frameInfo.frameIndex);
 
 		index = 0;
-		for (auto ent:ents){
-			auto& texture = ent.get<TextureComponent>();
+		for (auto [model, entId] : ents.iterate<ModelComponent>()){
 			TextureUboData& textureData = textureUbo.get(frameInfo.frameIndex,index);
-			textureData.diffuseMap = texture.texture;
+			if (model.texture) 
+			{
+				textureData.diffuseMap = model.texture;
+			} else {
+				textureData.diffuseMap = std::move(std::make_unique<SrcTexture>(srcDevice,"../textures/missing.png"));
+			}
 			
 			index += 1;
 		}
 		textureUbo.flushRegion(frameInfo.frameIndex);
 
 		index = 0;
-		for (auto ent: ents) {
-			auto& transform = ent.get<TransformComponent>();
-			auto& model = ent.get<ModelComponent>();
-
+		for (auto [transform, model, entId] : ents.iterate<TransformComponent, ModelComponent>()) {
 			auto bufferInfo = transformUbo.bufferInfoForElement(frameInfo.frameIndex,index);
 			auto imageInfo = textureUbo.get(frameInfo.frameIndex).diffuseMap->getImageInfo();
 			VkDescriptorSet transformDescriptorSet;
