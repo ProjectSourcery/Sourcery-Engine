@@ -5,12 +5,13 @@ The first ever engine that **will** be based upon the [LuaU language](https://lu
 ## TODO
 
 - [x] Textures
-- [ ] ECS (Entity Component System)
+- [x] ECS (Entity Component System)
 - [x] Organize the project
 - [ ] Implement LuaU into the engine
 - [ ] Optimalizations
 - [ ] Multisampling
 - [ ] Imgui?
+- [ ] Physics
 
 ## Building
 
