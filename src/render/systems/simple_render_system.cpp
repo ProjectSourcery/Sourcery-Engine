@@ -18,7 +18,7 @@ namespace src3 {
 		glm::mat4 normalMatrix{ 1.f };
 	};
 
-	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, EntManager &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device}, ents{ecs.allOf<TransformComponent,ModelComponent>()} {
+	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, entt::registry &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device}, ents{ecs} {
 		createPipelineLayout(globalSetLayout);
 		createPipeline(renderPass);
 	}
@@ -81,7 +81,7 @@ namespace src3 {
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
 		int index = 0;
-		for (auto [transform, entId] : ents.iterate<TransformComponent>()) {
+		for (auto [entity, transform] : ents.group<TransformComponent>({},entt::exclude<PointLightComponent>).each()) {
 			TransformUboData& transformData = transformUbo.get(frameInfo.frameIndex,index);
 			transformData.modelMatrix = transform.mat4();
 			transformData.normalMatrix = transform.normalMatrix();
@@ -91,7 +91,7 @@ namespace src3 {
 		transformUbo.flushRegion(frameInfo.frameIndex);
 
 		index = 0;
-		for (auto [model, entId] : ents.iterate<ModelComponent>()){
+		for (auto [entity, model] : ents.group<ModelComponent>({},entt::exclude<PointLightComponent>).each()){
 			TextureUboData& textureData = textureUbo.get(frameInfo.frameIndex,index);
 			if (model.texture) 
 			{
@@ -105,7 +105,7 @@ namespace src3 {
 		textureUbo.flushRegion(frameInfo.frameIndex);
 
 		index = 0;
-		for (auto [transform, model, entId] : ents.iterate<TransformComponent, ModelComponent>()) {
+		for (auto [entity, transform, model] : ents.group<TransformComponent, ModelComponent>({},entt::exclude<PointLightComponent>).each()) {
 			auto bufferInfo = transformUbo.bufferInfoForElement(frameInfo.frameIndex,index);
 			auto imageInfo = textureUbo.get(frameInfo.frameIndex).diffuseMap->getImageInfo();
 			VkDescriptorSet transformDescriptorSet;

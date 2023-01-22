@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/camera/src3_camera.h"
-#include "game/ecs/src3_ecs.h"
+#include "game/ecs/entt.hpp"
 #include "core/buffer/uniform/src3_descriptors.h"
 
 #include <vulkan/vulkan.h>
@@ -31,6 +31,6 @@ namespace src3 {
 		SrcCamera& camera; 
 		VkDescriptorSet globalDescriptorSet;
 		SrcDescriptorPool &frameDescriptorPool;
-		EntManager& ecs;
+		entt::registry& ecs;
 	};
 };

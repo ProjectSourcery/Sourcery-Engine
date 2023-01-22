@@ -116,25 +116,19 @@ namespace src3 {
 	{
         std::shared_ptr<SrcModel> srcModel = SrcModel::createModelFromFile(srcDevice, "models/flat_vase.obj");
 
-        auto fVase = ecs.createEnt();
-		auto [flatVaseTransform, flatVaseModel] = ecs.add<TransformComponent,ModelComponent>(fVase);
-		flatVaseModel.model = srcModel;
-		flatVaseTransform.translation = { -.5f, .5f, 0.f };
-		flatVaseTransform.scale = {3.f,3.f,3.f};
+        auto fVase = ecs.create();
+		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, .5f, 0.f ),glm::vec3(3.f,3.f,3.f));
+		ecs.emplace<ModelComponent>(fVase,srcModel);
 
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
-		auto smothVase = ecs.createEnt();
-		auto [smothVaseTransform,smothVaseModel] = ecs.add<TransformComponent, ModelComponent>(smothVase);
-		smothVaseTransform.translation = {.5f, .5f, 0.f};
-		smothVaseTransform.scale = {3.f, 1.5f, 3.f};
-		smothVaseModel.model = srcModel;
+		auto smoothVase = ecs.create();
+		ecs.emplace<TransformComponent>(smoothVase,glm::vec3(.5f, .5f, 0.f),glm::vec3(3.f, 1.5f, 3.f));
+		ecs.emplace<ModelComponent>(smoothVase,srcModel);
 
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/quad.obj");
-		auto floor = ecs.createEnt();
-		auto [floorTransform,floorModel] = ecs.add<TransformComponent, ModelComponent>(floor);
-		floorTransform.translation = {0.f, .5f, 0.f};
-		floorTransform.scale = {3.f, 1.f, 3.f};
-		floorModel.model = srcModel;
+		auto floor = ecs.create();
+		ecs.emplace<TransformComponent>(floor,glm::vec3(0.f, .5f, 0.f),glm::vec3(3.f, 1.f, 3.f));
+		ecs.emplace<ModelComponent>(floor,srcModel);
 
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},
@@ -147,14 +141,13 @@ namespace src3 {
 
 		for (int i = 0; i < lightColors.size(); i++) {
 			auto pointLight = makePointLight(ecs, 0.2f);
-			auto& pointLightColor = ecs.get<ColorComponent>(pointLight);
-			auto& pointLightTransform = ecs.get<TransformComponent>(pointLight);
-			pointLightColor.color = lightColors[i];
+			ecs.replace<ColorComponent>(pointLight,lightColors[i]);
+
 			auto rotateLight = glm::rotate(
 				glm::mat4(1.f),
 				(i * glm::two_pi<float>()) / lightColors.size(),
 				{0.f, -1.f, 0.f});
-			pointLightTransform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+			ecs.patch<TransformComponent>(pointLight,[&](TransformComponent &transform){ transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));});
 		}
 	}
 

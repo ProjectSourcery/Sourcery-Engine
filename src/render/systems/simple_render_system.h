@@ -6,7 +6,7 @@
 #include "core/buffer/uniform/src3_ubo.h"
 #include "game/camera/src3_camera.h"
 #include "game/gameobject/src3_game_object.h"
-#include "game/ecs/src3_ecs.h"
+#include "game/ecs/entt.hpp"
 #include "util/src3_frame_info.h"
 
 #include <memory>
@@ -25,7 +25,7 @@ namespace src3 {
 
 	class SimpleRenderSystem {
 	public:
-		SimpleRenderSystem(SrcDevice& device, EntManager &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout );
+		SimpleRenderSystem(SrcDevice& device, entt::registry &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout );
 		~SimpleRenderSystem();
 
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -49,7 +49,7 @@ namespace src3 {
 
 		std::unique_ptr<SrcTexture> defaultTexture = std::make_unique<SrcTexture>(srcDevice,"../textures/missing.png");
 
-		EntQueryResult ents;
+		entt::registry &ents;
 
 		friend struct TextureUboData;
 	};

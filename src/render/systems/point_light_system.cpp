@@ -9,6 +9,7 @@
 #include <cassert>
 #include <array>
 #include <map>
+#include <iostream>
 
 namespace src3 {
 
@@ -70,18 +71,15 @@ namespace src3 {
 	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
 		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, {0.f, -1.f, 0.f});
 		int lightIndex = 0;
-		auto pointLights = frameInfo.ecs.allOf<PointLightComponent>();
-		for (auto& light:pointLights) {
+		for (auto [entity,pointLight,lightTransform]: frameInfo.ecs.group<PointLightComponent>(entt::get<TransformComponent>).each()) {
 			assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
 
-			auto& lightTransform = light.get<TransformComponent>();
-
 			// update light position
-			lightTransform.translation = glm::vec3(rotateLight * glm::vec4(lightTransform.translation, 1.f));
+			frameInfo.ecs.emplace_or_replace<TransformComponent>(entity,glm::vec3(rotateLight * glm::vec4(lightTransform.translation, 1.f)),lightTransform.scale);
 
 			// copy light to ubo
 			ubo.pointLights[lightIndex].position = glm::vec4(lightTransform.translation, 1.f);
-			ubo.pointLights[lightIndex].color = glm::vec4(light.get<ColorComponent>().color, light.get<PointLightComponent>().lightIntensity);
+			ubo.pointLights[lightIndex].color = glm::vec4(frameInfo.ecs.get<ColorComponent>(entity).color, frameInfo.ecs.get<PointLightComponent>(entity).lightIntensity);
 
 			lightIndex += 1;
 		}
@@ -91,11 +89,8 @@ namespace src3 {
 	void PointLightSystem::render(FrameInfo& frameInfo)
 	{
 		// sort lights
-		std::map<float,EntId> sorted;
-		auto pointLights = frameInfo.ecs.allOf<PointLightComponent>();
-		for (auto lightId: pointLights.ids()) {
-			auto& lightTransform = frameInfo.ecs.get<TransformComponent>(lightId);
-
+		std::map<float,entt::entity> sorted;
+		for (auto [lightId,plc,lightTransform]: frameInfo.ecs.group<PointLightComponent>(entt::get<TransformComponent>).each()) {
 			auto offset = frameInfo.camera.getPosition() - lightTransform.translation;
 			float disSquared = glm::dot(offset,offset);
 			sorted[disSquared] = lightId;
@@ -107,9 +102,9 @@ namespace src3 {
 
 		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
 			auto lightId = it->second;
-			auto& lightTransform = frameInfo.ecs.get<TransformComponent>(lightId);
-    		auto& lightColor = frameInfo.ecs.get<ColorComponent>(lightId);
-    		auto& lightComp = frameInfo.ecs.get<PointLightComponent>(lightId);
+			auto lightTransform = frameInfo.ecs.get<TransformComponent>(lightId);
+    		auto lightColor = frameInfo.ecs.get<ColorComponent>(lightId);
+    		auto lightComp = frameInfo.ecs.get<PointLightComponent>(lightId);
 
 			PointLightPushConstants push{};
 			push.position = glm::vec4(lightTransform.translation, 1.f);
