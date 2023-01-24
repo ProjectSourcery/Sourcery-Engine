@@ -5,7 +5,7 @@
 // std lib headers
 #include <string>
 #include <vector>
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.h>
 
 namespace src3 {
 
@@ -45,6 +45,8 @@ namespace src3 {
         VkSurfaceKHR surface() { return surface_; }
         VkQueue graphicsQueue() { return graphicsQueue_; }
         VkQueue presentQueue() { return presentQueue_; }
+        VkPhysicalDevice getPhysicalDevice() { return physicalDevice; }
+        VkInstance getInstance() { return instance; }
 
         SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

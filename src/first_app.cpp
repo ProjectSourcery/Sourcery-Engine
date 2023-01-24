@@ -6,6 +6,7 @@
 #include "core/buffer/uniform/src3_ubo.h"
 #include "render/systems/simple_render_system.h"
 #include "render/systems/point_light_system.h"
+#include "render/imgui/src3_imgui.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -54,6 +55,7 @@ namespace src3 {
 				.build(globalDescriptorSets[i]);
 		}
 
+		SrcImGui imGui{srcDevice,srcWindow,framePools[0]->getDescriptorPool(),srcRenderer.getSwapChainRenderPass()};
 		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
         SrcCamera camera{};
@@ -101,6 +103,7 @@ namespace src3 {
 				// render
 				srcRenderer.beginSwapChainRenderPass(commandBuffer);
 
+				imGui.render(simpleRenderSystem.srcPipeline->getGraphicsPipeline(),commandBuffer);
 				simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
 				
@@ -108,6 +111,8 @@ namespace src3 {
 				srcRenderer.endFrame();
 			}
 		}
+
+		imGui.~SrcImGui();
 
 		vkDeviceWaitIdle(srcDevice.device());
 	}

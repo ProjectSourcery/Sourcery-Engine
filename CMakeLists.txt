@@ -62,10 +62,16 @@ if (NOT TINYOBJ_PATH)
   set(TINYOBJ_PATH external/tinyobjloader)
 endif()
 
-# If STB_IMAGE_PATH not specified in .env.cmake, try fetching from git repo
+# If STB_PATH not specified in .env.cmake, try fetching from git repo
 if (NOT STB_PATH)
   message(STATUS "STB_PATH not specified in .env.cmake, using external/stb")
   set(STB_PATH external/stb)
+endif()
+
+# If IMGUI_PATH not specified in .env.cmake, try fetching from git repo
+if (NOT IMGUI_PATH)
+  message(STATUS "IMGUI_PATH not specified in .env.cmake, using external/imgui")
+  set(IMGUI_PATH external/imgui)
 endif()
 
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)

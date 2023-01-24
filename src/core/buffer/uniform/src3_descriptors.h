@@ -75,6 +75,8 @@ namespace src3 {
 
         void freeDescriptors(std::vector<VkDescriptorSet>& descriptors) const;
 
+        VkDescriptorPool getDescriptorPool() const { return descriptorPool; };
+
         void resetPool();
 
     private:

@@ -34,6 +34,8 @@ namespace src3 {
 		std::unique_ptr<SrcTexture> getDefaultTexture() { return std::make_unique<SrcTexture>(srcDevice,"../textures/missing.png"); };
 
 		void renderGameObjects(FrameInfo& frameInfo);
+
+		std::unique_ptr<SrcPipeline> srcPipeline;
 	private:
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
 		void createPipeline(VkRenderPass renderPass);
@@ -41,8 +43,7 @@ namespace src3 {
 		SrcDevice& srcDevice;
 		SrcUbo<TransformUboData> transformUbo{srcDevice, 1000, false, true};
 		SrcUbo<TextureUboData> textureUbo{srcDevice, 1000, false, true};
-
-		std::unique_ptr<SrcPipeline> srcPipeline;
+		
 		VkPipelineLayout pipelineLayout;
 
 		std::unique_ptr<SrcDescriptorSetLayout> renderSystemLayout;

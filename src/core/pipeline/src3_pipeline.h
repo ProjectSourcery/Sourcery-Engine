@@ -43,6 +43,8 @@ namespace src3 {
 		static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 		static void enableAlphaBlending(PipelineConfigInfo& configInfo);
 
+		VkPipeline getGraphicsPipeline() const { return graphicsPipeline; }
+
 	private:
 		static std::vector<char> readFile(const std::string& filepath);
 		void createGraphicsPipeline(const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo);
