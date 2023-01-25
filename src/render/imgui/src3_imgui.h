@@ -3,6 +3,7 @@
 #include "core/device/src3_device.h"
 #include "core/buffer/uniform/src3_descriptors.h"
 #include "core/swapchain/src3_swap_chain.h"
+#include "render/renderer/src3_renderer.h"
 
 // std
 #include <memory>
@@ -13,6 +14,7 @@ namespace src3 {
   public:
     SrcImGui(SrcDevice &device,
       SrcWindow &window,
+      SrcRenderer &renderer,
       VkDescriptorPool descriptorPool,
       VkRenderPass renderPass);
     ~SrcImGui();
@@ -24,8 +26,9 @@ namespace src3 {
     void render(VkPipeline pipeline,VkCommandBuffer commandBuffer);
 
   private:
-    SrcDevice &srcDevice;
-    SrcWindow &srcWindow;
+    SrcDevice   &srcDevice;
+    SrcWindow   &srcWindow;
+    SrcRenderer &srcRenderer;
   };
 
 }

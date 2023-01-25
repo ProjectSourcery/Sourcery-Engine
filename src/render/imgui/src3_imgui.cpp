@@ -12,9 +12,10 @@
 namespace src3 {
 	SrcImGui::SrcImGui(SrcDevice &device,
 		SrcWindow &window,
+		SrcRenderer &renderer,
 		VkDescriptorPool descriptorPool,
 		VkRenderPass renderPass) 
-		: srcDevice{device}, srcWindow{window}
+		: srcDevice{device}, srcWindow{window}, srcRenderer{renderer}
 	{
 		ImGui::CreateContext();
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -26,8 +27,8 @@ namespace src3 {
 		info.DescriptorPool = descriptorPool;
 		info.Device = srcDevice.device();
 		info.PhysicalDevice = srcDevice.getPhysicalDevice();
-		info.ImageCount = SrcSwapChain::MAX_FRAMES_IN_FLIGHT;
-		info.MinImageCount = SrcSwapChain::MAX_FRAMES_IN_FLIGHT;
+		info.ImageCount = srcRenderer.getSwapChainImageSize();
+		info.MinImageCount = srcRenderer.getSwapChainImageSize();
 		info.Queue = srcDevice.graphicsQueue();
 		info.QueueFamily = srcDevice.findPhysicalQueueFamilies().graphicsFamily;
 		info.Subpass = 0;

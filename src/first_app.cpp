@@ -55,7 +55,7 @@ namespace src3 {
 				.build(globalDescriptorSets[i]);
 		}
 
-		SrcImGui imGui{srcDevice,srcWindow,framePools[0]->getDescriptorPool(),srcRenderer.getSwapChainRenderPass()};
+		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,framePools[0]->getDescriptorPool(),srcRenderer.getSwapChainRenderPass()};
 		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
         SrcCamera camera{};
