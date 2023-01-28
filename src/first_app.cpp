@@ -55,7 +55,7 @@ namespace src3 {
 				.build(globalDescriptorSets[i]);
 		}
 
-		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,framePools[0]->getDescriptorPool(),srcRenderer.getSwapChainRenderPass()};
+		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,srcRenderer.getSwapChainRenderPass()};
 		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
         SrcCamera camera{};
@@ -101,18 +101,21 @@ namespace src3 {
 				globalUbo.flushRegion(frameIndex);
 
 				// render
+				imGui.newFrame();
+
 				srcRenderer.beginSwapChainRenderPass(commandBuffer);
 
-				imGui.render(simpleRenderSystem.srcPipeline->getGraphicsPipeline(),commandBuffer);
 				simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
+
+				imGui.run();
+
+				imGui.render(commandBuffer);
 				
 				srcRenderer.endSwapChainRenderPass(commandBuffer);
 				srcRenderer.endFrame();
 			}
 		}
-
-		imGui.~SrcImGui();
 
 		vkDeviceWaitIdle(srcDevice.device());
 	}

@@ -13,10 +13,24 @@ namespace src3 {
 	SrcImGui::SrcImGui(SrcDevice &device,
 		SrcWindow &window,
 		SrcRenderer &renderer,
-		VkDescriptorPool descriptorPool,
 		VkRenderPass renderPass) 
 		: srcDevice{device}, srcWindow{window}, srcRenderer{renderer}
 	{
+		descriptorPool = SrcDescriptorPool::Builder(srcDevice)
+			.setMaxSets(1000 * 10 /* the amount of sizes */)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLER,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,1000)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,1000)
+			.setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT)
+			.build();
+
 		ImGui::CreateContext();
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -24,15 +38,18 @@ namespace src3 {
 
 		ImGui_ImplVulkan_InitInfo info;
 		info.Instance = device.getInstance();
-		info.DescriptorPool = descriptorPool;
+		info.DescriptorPool = descriptorPool->getDescriptorPool();
 		info.Device = srcDevice.device();
 		info.PhysicalDevice = srcDevice.getPhysicalDevice();
-		info.ImageCount = srcRenderer.getSwapChainImageSize();
-		info.MinImageCount = srcRenderer.getSwapChainImageSize();
+		info.ImageCount = srcRenderer.getImageCount();
+		info.MinImageCount = SrcSwapChain::MAX_FRAMES_IN_FLIGHT;
 		info.Queue = srcDevice.graphicsQueue();
 		info.QueueFamily = srcDevice.findPhysicalQueueFamilies().graphicsFamily;
 		info.Subpass = 0;
 		info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		info.CheckVkResultFn = check_vk_result;
+		info.PipelineCache = VK_NULL_HANDLE;
+		info.Allocator = VK_NULL_HANDLE;
 
 		ImGui_ImplVulkan_Init(&info,renderPass);
 
@@ -45,21 +62,24 @@ namespace src3 {
 	}
 
 	SrcImGui::~SrcImGui() {
+		vkDestroyDescriptorPool(srcDevice.device(), descriptorPool->getDescriptorPool(), nullptr);
 		ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
 	}
 
-	void SrcImGui::render(VkPipeline pipeline,VkCommandBuffer commandBuffer) {
+	void SrcImGui::newFrame() {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
-
 		ImGui::NewFrame();
+	}
 
-		// TODO: add a render system of some sorts
+	void SrcImGui::run() {
 		ImGui::ShowDemoWindow();
+	}
 
+	void SrcImGui::render(VkCommandBuffer commandBuffer) {
 		ImGui::Render();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),commandBuffer,pipeline);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),commandBuffer);
 	}
 } 

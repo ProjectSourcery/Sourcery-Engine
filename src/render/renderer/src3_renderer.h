@@ -20,7 +20,7 @@ namespace src3 {
 		VkRenderPass getSwapChainRenderPass() const { return srcSwapChain->getRenderPass(); }
 		float getAspectRatio() const { return srcSwapChain->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; };
-		uint32_t getSwapChainImageSize() const { return srcSwapChain->height() * srcSwapChain->width(); }
+		uint32_t getImageCount() const { return srcSwapChain->imageCount(); }
 
 		VkCommandBuffer getCurrentCommandBuffer() const { 
 			assert(isFrameStarted && "Cannot get command buffer when frame not in progress");

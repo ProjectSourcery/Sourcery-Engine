@@ -10,7 +10,7 @@ The first ever engine that **will** be based upon the [LuaU language](https://lu
 - [ ] Implement LuaU into the engine
 - [ ] Optimalizations
 - [ ] Multisampling
-- [ ] Imgui?
+- [x] Imgui?
 - [ ] Physics
 
 ## Building
