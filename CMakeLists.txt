@@ -74,6 +74,12 @@ if (NOT IMGUI_PATH)
   set(IMGUI_PATH external/imgui)
 endif()
 
+# If JOLT_PATH not specified in .env.cmake, try fetching from git repo
+if (NOT JOLT_PATH)
+  message(STATUS "JOLT_PATH not specified in .env.cmake, using external/imgui")
+  set(JOLT_PATH external/jolt)
+endif()
+
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
 add_executable(${PROJECT_NAME} ${SOURCES})

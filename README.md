@@ -1,6 +1,6 @@
 # Sourcery Engine
 
-The first ever engine that **will** be based upon the [LuaU language](https://luau-lang.org/)
+The second ever engine that **will** be based upon the [LuaU language](https://luau-lang.org/)
 
 ## TODO
 
@@ -10,7 +10,7 @@ The first ever engine that **will** be based upon the [LuaU language](https://lu
 - [ ] Implement LuaU into the engine
 - [ ] Optimalizations
 - [ ] Multisampling
-- [x] Imgui?
+- [x] Imgui
 - [ ] Physics
 
 ## Building
@@ -89,3 +89,12 @@ The first ever engine that **will** be based upon the [LuaU language](https://lu
 ```
 
 - This will build the project to build/SourceryEngine.exe, double click in file explorer to open and run
+
+## Special Thanks
+- [entt](https://github.com/skypjack/entt)
+- [glfw](https://www.glfw.org/)
+- [glm](https://github.com/g-truc/glm)
+- [imgui](https://github.com/ocornut/imgui)
+- [jolt](https://github.com/jrouwe/JoltPhysics)
+- [stb](https://github.com/nothings/stb)
+- [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)
