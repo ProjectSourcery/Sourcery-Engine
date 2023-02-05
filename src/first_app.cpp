@@ -2,6 +2,7 @@
 
 #include "game/keyboard_controller/keyboard_movement_controller.h"
 #include "game/camera/src3_camera.h"
+#include "game/systems/src3_physics.cpp"
 #include "core/buffer/src3_buffer.h"
 #include "core/buffer/uniform/src3_ubo.h"
 #include "render/systems/simple_render_system.h"
@@ -12,6 +13,9 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 
 #include <stdexcept>
 #include <chrono>
@@ -55,9 +59,14 @@ namespace src3 {
 				.build(globalDescriptorSets[i]);
 		}
 
+		// game systems
+		SrcPhysicsSystem physicsSystem{ecs};
+
+		// render systems
 		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,srcRenderer.getSwapChainRenderPass()};
 		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
+
         SrcCamera camera{};
         camera.setViewTarget(glm::vec3{ -1.f,-2.f,-2.f }, glm::vec3{ 0.f,0.f,2.5f });
 
@@ -100,6 +109,8 @@ namespace src3 {
 				pointLightSystem.update(frameInfo,ubo);
 				globalUbo.flushRegion(frameIndex);
 
+				physicsSystem.update();
+
 				// render
 				imGui.newFrame();
 
@@ -127,6 +138,9 @@ namespace src3 {
         auto fVase = ecs.create();
 		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, .5f, 0.f ),glm::vec3(3.f,3.f,3.f));
 		ecs.emplace<ModelComponent>(fVase,srcModel);
+		auto &physComp = ecs.emplace<PhysicsComponent>(fVase);
+		physComp.shape = new JPH::SphereShape(1.f);
+		physComp.velocity = JPH::Vec3(0.f,1.f,0.f);
 
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
 		auto smoothVase = ecs.create();
@@ -137,6 +151,8 @@ namespace src3 {
 		auto floor = ecs.create();
 		ecs.emplace<TransformComponent>(floor,glm::vec3(0.f, .5f, 0.f),glm::vec3(3.f, 1.f, 3.f));
 		ecs.emplace<ModelComponent>(floor,srcModel);
+		physComp = ecs.emplace<PhysicsComponent>(floor);
+		physComp.shape = new JPH::BoxShape(JPH::Vec3(3.f,1.f,3.f));
 
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},

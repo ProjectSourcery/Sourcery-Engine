@@ -76,8 +76,6 @@ namespace src3 {
 	{
 		srcPipeline->bind(frameInfo.commandBuffer);
 
-		auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
-
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
 		int index = 0;
@@ -97,7 +95,10 @@ namespace src3 {
 			{
 				textureData.diffuseMap = model.texture;
 			} else {
+				#pragma GCC diagnostic push
+				#pragma GCC diagnostic ignored "-Wpessimizing-move"
 				textureData.diffuseMap = std::move(std::make_unique<SrcTexture>(srcDevice,"../textures/missing.png"));
+				#pragma GCC diagnostic pop
 			}
 			
 			index += 1;

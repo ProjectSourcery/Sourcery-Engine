@@ -8,6 +8,3 @@
 
 # Optional set IMGUI_PATH to target specific version, otherwise defaults to external/imgui
 # set(IMGUI_PATH X:/dev/Libraries/imgui)
-
-# Optional set JOLT_PATH to target specific version, otherwise defaults to external/jolt
-# set(JOLT_PATH X:/dev/Libraries/jolt)

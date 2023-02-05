@@ -24,9 +24,9 @@ class SrcUbo {
       bool descriptorInfoPerElement = true,
       int numRegions = SrcSwapChain::MAX_FRAMES_IN_FLIGHT)
       : srcDevice{device},
+        numRegions{numRegions},
         instancesPerRegion{instancesPerRegion},
         instanceSize{sizeof(T)},
-        numRegions{numRegions},
         flushablePerElement{flushablePerElement},
         descriptorInfoPerElement{descriptorInfoPerElement} {
     calculateAlignmentAndRegionSize();

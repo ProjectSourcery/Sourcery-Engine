@@ -73,6 +73,13 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "atomic": "cpp"
+        "atomic": "cpp",
+        "condition_variable": "cpp",
+        "mutex": "cpp",
+        "queue": "cpp",
+        "random": "cpp",
+        "shared_mutex": "cpp",
+        "xthread": "cpp",
+        "thread": "cpp"
     }
 }
