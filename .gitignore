@@ -2,3 +2,4 @@ build
 shaders/*.spv
 .env.cmake
 .vscode
+VS2022_CL

@@ -11,7 +11,7 @@ The second ever engine that **will** be based upon the [LuaU language](https://l
 - [ ] Optimalizations
 - [ ] Multisampling
 - [x] Imgui
-- [ ] Physics
+- [x] Physics
 
 ## Building
 
