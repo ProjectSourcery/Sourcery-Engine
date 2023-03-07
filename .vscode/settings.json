@@ -80,6 +80,8 @@
         "random": "cpp",
         "shared_mutex": "cpp",
         "xthread": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "charconv": "cpp",
+        "cassert": "cpp"
     }
 }

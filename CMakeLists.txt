@@ -7,12 +7,12 @@ set(NAME SourceryEngine)
 
 message(STATUS "using ${CMAKE_GENERATOR}")
 if (CMAKE_GENERATOR STREQUAL "MinGW Makefiles")
-    if (NOT MINGW_PATH) 
-      message(FATAL_ERROR "MINGW_PATH not set in .env.cmake")
+    if (MINGW_PATH AND MINGW) 
+      message("Using .env.cmake MinGW")
+      set(CMAKE_C_COMPILER ${MINGW_PATH}/bin/gcc.exe)
+      set(CMAKE_CXX_COMPILER  ${MINGW_PATH}/bin/g++.exe)
     endif()
     set(USE_MINGW "True")
-    set(CMAKE_C_COMPILER ${MINGW_PATH}/bin/gcc.exe)
-    set(CMAKE_CXX_COMPILER  ${MINGW_PATH}/bin/g++.exe)
 endif()
 
 project(${NAME} VERSION 0.23.0)
@@ -81,7 +81,7 @@ endif()
 ## Jolt
 set(DOUBLE_PRECISION ON)
 set(GENERATE_DEBUG_SYMBOLS ON)
-set(CROSS_PLATFORM_DETERMINISTIC OFF)
+set(CROSS_PLATFORM_DETERMINISTIC ON)
 set(INTERPROCEDURAL_OPTIMIZATION ON)
 set(FLOATING_POINT_EXCEPTIONS_ENABLED OFF)
 
@@ -99,7 +99,7 @@ set(USE_FMADD ON)
 FetchContent_Declare(
         JoltPhysics
         GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
-        GIT_TAG "64fd3927e1df12f3b74243ac344bcb9b9e3233c7"
+        GIT_TAG "eb7b9df74e1dbbde813fc8535c82447a38c80c1d"
 		SOURCE_SUBDIR "build"
 )
 FetchContent_MakeAvailable(JoltPhysics)
@@ -121,14 +121,10 @@ if (("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows" OR "${CMAKE_SYSTEM_NAME}" STREQUA
 	set(CMAKE_VS_PLATFORM_TOOLSET_HOST_ARCHITECTURE "x64")
 
 	# Set runtime library
-	if (USE_STATIC_MSVC_RUNTIME_LIBRARY)
-		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	else()
-		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-	endif()
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
 	# Set general compiler flags
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /Gm- /Wall /WX /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:__cplusplus /Gm- /Wall /MP /nologo /diagnostics:classic /FC /fp:except- /Zc:inline")
 	
 	# Optionally generate debug symbols
 	if (GENERATE_DEBUG_SYMBOLS)
@@ -191,8 +187,11 @@ elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux" OR "${CMAKE_SYSTEM_NAME}" STREQU
 	set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 	set(CMAKE_CXX_FLAGS_DISTRIBUTION "-O3")
 
+  # Libs, that went missing... idk
+  set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ -lwsock32 -lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
+
 	# Set linker flags
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS_DISTRIBUTION "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")

@@ -2,7 +2,6 @@
 
 #include "game/keyboard_controller/keyboard_movement_controller.h"
 #include "game/camera/src3_camera.h"
-#include "game/systems/src3_physics.cpp"
 #include "core/buffer/src3_buffer.h"
 #include "core/buffer/uniform/src3_ubo.h"
 #include "render/systems/simple_render_system.h"
@@ -36,7 +35,7 @@ namespace src3 {
 			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000)
 			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1000)
 			.setPoolFlags(VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT);
-		for (int i = 0; i < framePools.size(); i++) {
+		for (long long unsigned int i = 0; i < framePools.size(); i++) {
 			framePools[i] = framePoolBuilder.build();
 		}
 
@@ -52,20 +51,21 @@ namespace src3 {
 			.build();
 
 		std::vector<VkDescriptorSet> globalDescriptorSets(SrcSwapChain::MAX_FRAMES_IN_FLIGHT);
-		for (int i = 0; i < globalDescriptorSets.size(); i++) {
+		for (long long unsigned int i = 0; i < globalDescriptorSets.size(); i++) {
 			auto bufferInfo = globalUbo.bufferInfoForRegion(i);
 			SrcDescriptorWriter(*globalSetLayout, *globalPool)
 				.writeBuffer(0, &bufferInfo)
 				.build(globalDescriptorSets[i]);
 		}
 
-		// game systems
-		SrcPhysicsSystem physicsSystem{ecs};
-
 		// render systems
 		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,srcRenderer.getSwapChainRenderPass()};
 		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
+
+		// game systems
+		
+		///////////////
 
         SrcCamera camera{};
         camera.setViewTarget(glm::vec3{ -1.f,-2.f,-2.f }, glm::vec3{ 0.f,0.f,2.5f });
@@ -89,6 +89,8 @@ namespace src3 {
             float aspect = srcRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect,0.1f,100.0f);
 
+			physicsSystem.update();
+
 			if (auto commandBuffer = srcRenderer.beginFrame()) {
 				int frameIndex = srcRenderer.getFrameIndex();
 				framePools[frameIndex]->resetPool();
@@ -108,8 +110,6 @@ namespace src3 {
 				ubo.inverseView = camera.getInverseView();
 				pointLightSystem.update(frameInfo,ubo);
 				globalUbo.flushRegion(frameIndex);
-
-				physicsSystem.update();
 
 				// render
 				imGui.newFrame();
@@ -138,10 +138,13 @@ namespace src3 {
         auto fVase = ecs.create();
 		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, .5f, 0.f ),glm::vec3(3.f,3.f,3.f));
 		ecs.emplace<ModelComponent>(fVase,srcModel);
-		auto &physComp = ecs.emplace<PhysicsComponent>(fVase);
-		physComp.shape = new JPH::SphereShape(1.f);
-		physComp.velocity = JPH::Vec3(0.f,1.f,0.f);
+		ecs.emplace<PhysicsComponent>(fVase);
+		{
+			PhysicsComponent phys{};
 
+			physicsSystem.registerPhysicsBody(fVase,new SphereShape(1.f),phys,EActivation::Activate);
+		}
+		
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
 		auto smoothVase = ecs.create();
 		ecs.emplace<TransformComponent>(smoothVase,glm::vec3(.5f, .5f, 0.f),glm::vec3(3.f, 1.5f, 3.f));
@@ -151,8 +154,13 @@ namespace src3 {
 		auto floor = ecs.create();
 		ecs.emplace<TransformComponent>(floor,glm::vec3(0.f, .5f, 0.f),glm::vec3(3.f, 1.f, 3.f));
 		ecs.emplace<ModelComponent>(floor,srcModel);
-		physComp = ecs.emplace<PhysicsComponent>(floor);
-		physComp.shape = new JPH::BoxShape(JPH::Vec3(3.f,1.f,3.f));
+		ecs.emplace<PhysicsComponent>(floor);
+		{
+			PhysicsComponent phys{};
+			phys.objectLayer = Layers::NON_MOVING;
+
+			physicsSystem.registerPhysicsBody(fVase,new BoxShape(Vec3(3.f,1.f,3.f)),phys,EActivation::Activate);
+		}
 
 		std::vector<glm::vec3> lightColors{
 			{1.f, .1f, .1f},
@@ -163,7 +171,7 @@ namespace src3 {
 			{1.f, 1.f, 1.f}  
 		};
 
-		for (int i = 0; i < lightColors.size(); i++) {
+		for (long long unsigned int i = 0; i < lightColors.size(); i++) {
 			auto pointLight = makePointLight(ecs, 0.2f);
 			ecs.replace<ColorComponent>(pointLight,lightColors[i]);
 

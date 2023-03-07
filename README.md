@@ -4,12 +4,12 @@ The second ever engine that **will** be based upon the [LuaU language](https://l
 
 ## TODO
 
+- [ ] Editor
+- [ ] Implement LuaU into the engine
+- [ ] Optimalizations
 - [x] Textures
 - [x] ECS (Entity Component System)
 - [x] Organize the project
-- [ ] Implement LuaU into the engine
-- [ ] Optimalizations
-- [ ] Multisampling
 - [x] Imgui
 - [x] Physics
 

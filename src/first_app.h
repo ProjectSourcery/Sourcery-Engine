@@ -4,6 +4,7 @@
 #include "core/device/src3_device.h"
 #include "game/gameobject/src3_game_object.h"
 #include "game/ecs/entt.hpp"
+#include "game/systems/src3_physics.cpp"
 #include "render/renderer/src3_renderer.h"
 #include "core/buffer/uniform/src3_descriptors.h"
 
@@ -33,5 +34,6 @@ namespace src3 {
 		std::unique_ptr<SrcDescriptorPool> globalPool{};
 		std::vector<std::unique_ptr<SrcDescriptorPool>> framePools{};
 		entt::registry ecs{};
+		SrcPhysicsSystem physicsSystem{ecs};
 	};
 }
