@@ -79,7 +79,7 @@ namespace src3 {
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
 		int index = 0;
-		for (auto [entity, transform] : ents.group<TransformComponent>({},entt::exclude<PointLightComponent>).each()) {
+		for (auto [entity, transform] : ents.view<TransformComponent>(entt::exclude<PointLightComponent>).each()) {
 			TransformUboData& transformData = transformUbo.get(frameInfo.frameIndex,index);
 			transformData.modelMatrix = transform.mat4();
 			transformData.normalMatrix = transform.normalMatrix();
@@ -89,7 +89,7 @@ namespace src3 {
 		transformUbo.flushRegion(frameInfo.frameIndex);
 
 		index = 0;
-		for (auto [entity, model] : ents.group<ModelComponent>({},entt::exclude<PointLightComponent>).each()){
+		for (auto [entity, model] : ents.view<ModelComponent>(entt::exclude<PointLightComponent>).each()){
 			TextureUboData& textureData = textureUbo.get(frameInfo.frameIndex,index);
 			if (model.texture) 
 			{
@@ -106,7 +106,7 @@ namespace src3 {
 		textureUbo.flushRegion(frameInfo.frameIndex);
 
 		index = 0;
-		for (auto [entity, transform, model] : ents.group<TransformComponent, ModelComponent>({},entt::exclude<PointLightComponent>).each()) {
+		for (auto [entity, transform, model] : ents.view<TransformComponent, ModelComponent>(entt::exclude<PointLightComponent>).each()) {
 			auto bufferInfo = transformUbo.bufferInfoForElement(frameInfo.frameIndex,index);
 			auto imageInfo = textureUbo.get(frameInfo.frameIndex).diffuseMap->getImageInfo();
 			VkDescriptorSet transformDescriptorSet;

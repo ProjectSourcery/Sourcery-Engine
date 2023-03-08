@@ -39,6 +39,8 @@ namespace src3 {
 			framePools[i] = framePoolBuilder.build();
 		}
 
+		JPH::RegisterDefaultAllocator(); //Jolt Physics -- cant think of anything else
+		physicsSystem = std::make_unique<SrcPhysicsSystem>(ecs);
 		loadGameObjects();
 	}
 
@@ -89,7 +91,7 @@ namespace src3 {
             float aspect = srcRenderer.getAspectRatio();
             camera.setPerspectiveProjection(glm::radians(50.f), aspect,0.1f,100.0f);
 
-			physicsSystem.update();
+			physicsSystem->update();
 
 			if (auto commandBuffer = srcRenderer.beginFrame()) {
 				int frameIndex = srcRenderer.getFrameIndex();
@@ -136,14 +138,10 @@ namespace src3 {
         std::shared_ptr<SrcModel> srcModel = SrcModel::createModelFromFile(srcDevice, "models/flat_vase.obj");
 
         auto fVase = ecs.create();
-		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, .5f, 0.f ),glm::vec3(3.f,3.f,3.f));
+		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, -.5f, 0.f ),glm::vec3(3.f,3.f,3.f));
 		ecs.emplace<ModelComponent>(fVase,srcModel);
 		ecs.emplace<PhysicsComponent>(fVase);
-		{
-			PhysicsComponent phys{};
-
-			physicsSystem.registerPhysicsBody(fVase,new SphereShape(1.f),phys,EActivation::Activate);
-		}
+		physicsSystem->registerPhysicsBody(fVase,new SphereShape(1.f),{},EActivation::Activate);
 		
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
 		auto smoothVase = ecs.create();
@@ -157,9 +155,10 @@ namespace src3 {
 		ecs.emplace<PhysicsComponent>(floor);
 		{
 			PhysicsComponent phys{};
+			phys.motionType = EMotionType::Static;
 			phys.objectLayer = Layers::NON_MOVING;
 
-			physicsSystem.registerPhysicsBody(fVase,new BoxShape(Vec3(3.f,1.f,3.f)),phys,EActivation::Activate);
+			physicsSystem->registerPhysicsBody(fVase,new BoxShape(Vec3(3.f,1.f,3.f)),phys);
 		}
 
 		std::vector<glm::vec3> lightColors{

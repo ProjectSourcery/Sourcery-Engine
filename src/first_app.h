@@ -34,6 +34,6 @@ namespace src3 {
 		std::unique_ptr<SrcDescriptorPool> globalPool{};
 		std::vector<std::unique_ptr<SrcDescriptorPool>> framePools{};
 		entt::registry ecs{};
-		SrcPhysicsSystem physicsSystem{ecs};
+		std::unique_ptr<SrcPhysicsSystem> physicsSystem{};
 	};
 }

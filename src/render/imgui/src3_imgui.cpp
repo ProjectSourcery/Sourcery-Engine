@@ -62,10 +62,10 @@ namespace src3 {
 	}
 
 	SrcImGui::~SrcImGui() {
-		vkDestroyDescriptorPool(srcDevice.device(), descriptorPool->getDescriptorPool(), nullptr);
 		ImGui_ImplVulkan_Shutdown();
         ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
+		ImGui::DestroyContext();
+		vkDestroyDescriptorPool(srcDevice.device(), descriptorPool->getDescriptorPool(), nullptr);
 	}
 
 	void SrcImGui::newFrame() {

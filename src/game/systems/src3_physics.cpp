@@ -50,7 +50,7 @@ static void traceImpl(const char *inFMT,...) {
 #ifdef JPH_ENABLE_ASSERTS
 
 static bool assertFailedImpl(const char *inExpr, const char *inMessage, const char *inFile, uint inLine) {
-    std::cout << "[ASSERT_F][" << inFile << "]: (" << inExpr << ") " << (inMessage != nullptr? inMessage : "") << std::endl;
+    std::cout << "[ASSERT_F][" << inFile << ":"<< inLine <<"]: (" << inExpr << ") " << (inMessage != nullptr? inMessage : "") << std::endl;
 
     return true;
 }
@@ -70,7 +70,7 @@ namespace src3 {
 
         RVec3 position{};                  // optional to set, if not set, it will use TransformComponent's position
         Quat rotation = Quat::sIdentity(); // optional to set, if not set, it will use TransformComponent's rotation
-        Vec3 velocity{};                   // optional to set
+        Vec3 velocity{ 0.f,0.f,0.f };      // optional to set
 
         EMotionType motionType  = EMotionType::Dynamic; // optional
         ObjectLayer objectLayer = Layers::MOVING; // optional
@@ -204,8 +204,6 @@ namespace src3 {
         public:
             SrcPhysicsSystem(entt::registry &entityComponentSystem) : ecs{entityComponentSystem}
             {
-                RegisterDefaultAllocator();
-
                 Trace = traceImpl;
                 JPH_IF_ENABLE_ASSERTS(AssertFailed = assertFailedImpl);
 
@@ -213,14 +211,13 @@ namespace src3 {
 
                 RegisterTypes();
 
-                tempAllocator = std::make_unique<TempAllocatorImpl>(8*1024*1024);
-                jobSystem = std::make_unique<JobSystemThreadPool>(cMaxPhysicsJobs, cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1));
-
                 physicsSystem.Init(maxBodies,numBodyMutexes,maxBodyPairs,maxContactConstraints,
                                 broadPhaseLayerInterface,objectVsBroadphaseLayerFilter,objectVsObjectLayerFilter);
                 
                 physicsSystem.SetBodyActivationListener(srcBodyActivationListener);
                 physicsSystem.SetContactListener(srcContactListener);
+
+                physicsSystem.SetGravity(-(physicsSystem.GetGravity()));
             }
 
             ~SrcPhysicsSystem()
@@ -247,21 +244,22 @@ namespace src3 {
                             trans_c.translation.x = pos.GetX(); trans_c.translation.y = pos.GetY(); trans_c.translation.z = pos.GetZ();
                             trans_c.rotation.x    = rot.GetX(); trans_c.rotation.y    = rot.GetY(); trans_c.rotation.z    = rot.GetZ();
                         });
+                        std::cout << "X: " << pos.GetX() << "; Y: " << pos.GetY() << "; Z: " << pos.GetZ();
 
                         // magic end
                     }
                 }
-                physicsSystem.Update(deltaTime,collisionSteps,integerationSubSteps,tempAllocator.get(), jobSystem.get());
+                physicsSystem.Update(deltaTime,collisionSteps,integerationSubSteps,&tempAllocator, &jobSystem);
             }
 
-            BodyID registerPhysicsBody(entt::entity entity,Shape *shape,PhysicsComponent options,EActivation activationMode = EActivation::DontActivate){
+            BodyID registerPhysicsBody(entt::entity entity,Shape *shape,PhysicsComponent options = {}, EActivation activationMode = EActivation::DontActivate) {
                 auto transform = ecs.get<TransformComponent>(entity);
                 RVec3 pos = options.position == RVec3          () ? RVec3(transform.translation.x,transform.translation.y,transform.translation.z) : options.position;
-                Quat  rot = options.rotation == Quat::sIdentity() ? Quat (transform.rotation.x,transform.rotation.y,transform.rotation.z,0)        : options.rotation;
+                Quat  rot = options.rotation == Quat::sIdentity() ? Quat (transform.rotation.x,transform.rotation.y,transform.rotation.z,1)        : options.rotation;
                 BodyCreationSettings bcs{
                     shape, 
-                    pos,
-                    rot,
+                    pos.Normalized(),
+                    rot.Normalized(),
                     options.motionType,
                     options.objectLayer
                 };
@@ -271,8 +269,8 @@ namespace src3 {
                 return bodyid;
             }
 
-            const float deltaTime = 1.f / 200.f;
-            const int collisionSteps = 2;
+            const float deltaTime = 1.f / 60.f;
+            const int collisionSteps = 1;
             const int integerationSubSteps = 2;
         private:
             const uint maxBodies = 65536;
@@ -280,15 +278,15 @@ namespace src3 {
             const uint maxBodyPairs = 65536;
             const uint maxContactConstraints = 10240;
 
-            std::unique_ptr<TempAllocatorImpl> tempAllocator;
-            std::unique_ptr<JobSystemThreadPool> jobSystem;
+            TempAllocatorMalloc tempAllocator{ /*8 * 1024 * 1024*/ };
+            JobSystemThreadPool jobSystem{ cMaxPhysicsJobs, cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1) };
 
             BPLayerInterfaceImpl broadPhaseLayerInterface{};
             ObjectVsBroadPhaseLayerFilterImpl objectVsBroadphaseLayerFilter{};
             ObjectLayerPairFilterImpl objectVsObjectLayerFilter{};
 
-            SrcBodyActivationListener *srcBodyActivationListener;
-            SrcContactListener *srcContactListener;
+            SrcBodyActivationListener *srcBodyActivationListener{};
+            SrcContactListener *srcContactListener{};
 
             PhysicsSystem physicsSystem;
             BodyInterface &bodyInterface = physicsSystem.GetBodyInterface();

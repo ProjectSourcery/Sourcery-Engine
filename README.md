@@ -30,7 +30,7 @@ The second ever engine that **will** be based upon the [LuaU language](https://l
   ```
 - To Build
   ```
-   cd LittleVulkanEngine
+   cd Sourcery-Engine
    ./unixBuild.sh
   ```
 
