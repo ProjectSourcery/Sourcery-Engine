@@ -217,7 +217,7 @@ namespace src3 {
                 physicsSystem.SetBodyActivationListener(srcBodyActivationListener);
                 physicsSystem.SetContactListener(srcContactListener);
 
-                physicsSystem.SetGravity(-(physicsSystem.GetGravity()));
+                physicsSystem.SetGravity(/* - */(physicsSystem.GetGravity()));
             }
 
             ~SrcPhysicsSystem()
@@ -241,10 +241,10 @@ namespace src3 {
                         // magic start
 
                         ecs.patch<TransformComponent>(entity,[&](TransformComponent &trans_c){
-                            trans_c.translation.x = pos.GetX(); trans_c.translation.y = pos.GetY(); trans_c.translation.z = pos.GetZ();
+                            trans_c.translation.x = pos.GetX(); trans_c.translation.y = (-pos.GetY()) - 1.f/*TODO: fix this -- i've had enough*/; trans_c.translation.z = pos.GetZ();
                             trans_c.rotation.x    = rot.GetX(); trans_c.rotation.y    = rot.GetY(); trans_c.rotation.z    = rot.GetZ();
                         });
-                        std::cout << "X: " << pos.GetX() << "; Y: " << pos.GetY() << "; Z: " << pos.GetZ();
+                        std::cout << "Y: " << pos.GetY() << std::endl;
 
                         // magic end
                     }
@@ -258,7 +258,7 @@ namespace src3 {
                 Quat  rot = options.rotation == Quat::sIdentity() ? Quat (transform.rotation.x,transform.rotation.y,transform.rotation.z,1)        : options.rotation;
                 BodyCreationSettings bcs{
                     shape, 
-                    pos.Normalized(),
+                    pos,
                     rot.Normalized(),
                     options.motionType,
                     options.objectLayer

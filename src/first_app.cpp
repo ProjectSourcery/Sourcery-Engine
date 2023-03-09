@@ -89,7 +89,7 @@ namespace src3 {
             camera.setViewYXZ(viewerTransform.translation, viewerTransform.rotation);
 
             float aspect = srcRenderer.getAspectRatio();
-            camera.setPerspectiveProjection(glm::radians(50.f), aspect,0.1f,100.0f);
+            camera.setPerspectiveProjection(glm::radians(70.f), aspect,0.1f,100.0f);
 
 			physicsSystem->update();
 
@@ -138,10 +138,10 @@ namespace src3 {
         std::shared_ptr<SrcModel> srcModel = SrcModel::createModelFromFile(srcDevice, "models/flat_vase.obj");
 
         auto fVase = ecs.create();
-		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, -.5f, 0.f ),glm::vec3(3.f,3.f,3.f));
+		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, -1.f, 0.f ),glm::vec3(3.f,3.f,3.f));
 		ecs.emplace<ModelComponent>(fVase,srcModel);
 		ecs.emplace<PhysicsComponent>(fVase);
-		physicsSystem->registerPhysicsBody(fVase,new SphereShape(1.f),{},EActivation::Activate);
+		physicsSystem->registerPhysicsBody(fVase, new SphereShape(1.f), {}, EActivation::Activate);
 		
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
 		auto smoothVase = ecs.create();
@@ -158,7 +158,7 @@ namespace src3 {
 			phys.motionType = EMotionType::Static;
 			phys.objectLayer = Layers::NON_MOVING;
 
-			physicsSystem->registerPhysicsBody(fVase,new BoxShape(Vec3(3.f,1.f,3.f)),phys);
+			physicsSystem->registerPhysicsBody(floor,new BoxShape(Vec3(3.f,1.f,3.f)),phys);
 		}
 
 		std::vector<glm::vec3> lightColors{

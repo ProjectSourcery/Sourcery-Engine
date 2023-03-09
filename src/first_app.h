@@ -14,8 +14,8 @@
 namespace src3 {
 	class FirstApp {
 	public:
-		static constexpr int WIDTH = 800;
-		static constexpr int HEIGHT = 600;
+		static constexpr int WIDTH = 1920;
+		static constexpr int HEIGHT = 1080;
 
 		FirstApp();
 		~FirstApp();
