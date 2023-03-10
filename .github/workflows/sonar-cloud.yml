@@ -25,7 +25,7 @@ jobs:
       - name: Run build-wrapper
         run: |
           New-Item -ItemType directory -Path build
-          cmake -S . -B build -DGLFW_PATH=${{github.workspace}}/external/glfw-3.3.8.bin.WIN64 -DGLM_PATH=${{github.workspace}}/external/glm -DVULKAN_SDK_PATH=${{env.VULKAN_SDK}}
+          cmake -S . -B build -DGLFW_PATH=${{github.workspace}}/external/glfw-3.3.8.bin.WIN64 -DGLM_PATH=${{github.workspace}}/external/glm -DVULKAN_SDK_PATH=${{env.VULKAN_SDK}} -DUSE_STATIC_MSVC_RUNTIME_LIBRARY=OFF
           build-wrapper-win-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build/ --config Release
       - name: Run sonar-scanner
         env:

@@ -7,6 +7,9 @@ set(VULKAN_SDK_PATH  X:/VulkanSDK/1.2.182.0)
 # set(TOOLCHAIN_PREFIX x86_64-w64-mingw32)
 # set(MINGW_PATH "C:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64") # change path here if not using MSYS2
 
+# # Uncomment this if using buildWin32VS2022.bat
+# set(USE_STATIC_MSVC_RUNTIME_LIBRARY OFF)
+
 # # cross compilers to use for C, C++ and Fortran
 # set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc)
 # set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++)
