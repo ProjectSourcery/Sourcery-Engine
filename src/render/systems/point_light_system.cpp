@@ -71,7 +71,7 @@ namespace src3 {
 	void PointLightSystem::update(FrameInfo& frameInfo, GlobalUbo& ubo) {
 		auto rotateLight = glm::rotate(glm::mat4(1.f), 0.5f * frameInfo.frameTime, {0.f, -1.f, 0.f});
 		int lightIndex = 0;
-		for (auto [entity,pointLight,lightTransform]: frameInfo.ecs.group<PointLightComponent>(entt::get<TransformComponent>).each()) {
+		for (auto [entity,pointLight,lightTransform]: frameInfo.ecs.view<PointLightComponent,TransformComponent>().each()) {
 			assert(lightIndex < MAX_LIGHTS && "Point lights exceed maximum specified");
 
 			// update light position
@@ -90,7 +90,7 @@ namespace src3 {
 	{
 		// sort lights
 		std::map<float,entt::entity> sorted;
-		for (auto [lightId,plc,lightTransform]: frameInfo.ecs.group<PointLightComponent>(entt::get<TransformComponent>).each()) {
+		for (auto [lightId,plc,lightTransform]: frameInfo.ecs.view<PointLightComponent,TransformComponent>().each()) {
 			auto offset = frameInfo.camera.getPosition() - lightTransform.translation;
 			float disSquared = glm::dot(offset,offset);
 			sorted[disSquared] = lightId;

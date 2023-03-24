@@ -8,3 +8,6 @@
 
 # Optional set IMGUI_PATH to target specific version, otherwise defaults to external/imgui
 # set(IMGUI_PATH X:/dev/Libraries/imgui)
+
+# Optional set RTTR_PATH to target specific version, otherwise defaults to external/rttr
+# set(RTTR_PATH X:/dev/Libraries/rttr)

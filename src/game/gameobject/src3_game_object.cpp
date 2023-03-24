@@ -60,3 +60,40 @@ namespace src3 {
 		};
 	}
 }
+
+RTTR_REGISTRATION{ // a sacrifice must be made
+    using namespace rttr;
+    using namespace src3;
+
+    //                      TransformComponent
+    registration::class_<TransformComponent>("TransformComponent")
+            .property("translation",&TransformComponent::translation)
+            .property("scale",&TransformComponent::scale)
+            .property("rotation",&TransformComponent::rotation)
+            .method("mat4",&TransformComponent::mat4)
+            .method("normalMatrix",&TransformComponent::normalMatrix);
+
+    //                      PointLightComponent
+    registration::class_<PointLightComponent>("PointLightComponent")
+            .property("lightIntensity",&PointLightComponent::lightIntensity);
+
+    //                      ColorComponent
+    registration::class_<ColorComponent>("ColorComponent")
+            .property("color",&ColorComponent::color);
+
+    //                      ModelComponent
+    registration::class_<ModelComponent>("ModelComponent")
+            .property("modelFile",&ModelComponent::modelFile)
+            .property("textureFile",&ModelComponent::textureFile)
+            .property_readonly("model",&ModelComponent::model)
+            .property_readonly("texture",&ModelComponent::texture);
+
+    //                      PhysicsComponent
+    registration::class_<PhysicsComponent>("PhysicsComponent")
+            .property("physicsBodyID",&PhysicsComponent::physicsBodyID)
+            .property("position",&PhysicsComponent::position)
+            .property("rotation",&PhysicsComponent::rotation)
+            .property("velocity",&PhysicsComponent::velocity)
+            .property("motionType",&PhysicsComponent::motionType)
+            .property("objectLayer",&PhysicsComponent::objectLayer);
+};

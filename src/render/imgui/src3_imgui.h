@@ -11,6 +11,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include "game/ecs/entt.hpp"
+#include "game/gameobject/src3_game_object.h"
+
 // std
 #include <memory>
 #include <string>
@@ -28,25 +31,12 @@ namespace src3 {
     SrcImGui(SrcDevice &device,
       SrcWindow &window,
       SrcRenderer &renderer,
-      VkRenderPass renderPass);
+      entt::registry &ecs);
     ~SrcImGui();
 
     // delete copy constructors
     SrcImGui(const SrcImGui &) = delete;
     SrcImGui &operator=(const SrcImGui &) = delete;
-
-    struct Vertex {
-			glm::vec3 position{};
-      glm::vec2 uv{};
-			glm::vec3 color{};
-
-			static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
-			static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
-
-			bool operator==(const Vertex& other) const {
-				return position == other.position && color == other.color && uv  == other.uv;
-			}
-		};
 
     void newFrame();
 
@@ -59,6 +49,7 @@ namespace src3 {
     SrcWindow   &srcWindow;
     SrcRenderer &srcRenderer;
     std::unique_ptr<SrcDescriptorPool> descriptorPool;
+    entt::registry &ecs;
   };
 
 }

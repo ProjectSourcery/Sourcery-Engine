@@ -61,7 +61,7 @@ namespace src3 {
 		}
 
 		// render systems
-		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,srcRenderer.getSwapChainRenderPass()};
+		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,ecs};
 		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 
@@ -140,7 +140,6 @@ namespace src3 {
         auto fVase = ecs.create();
 		ecs.emplace<TransformComponent>(fVase,glm::vec3( -.5f, -1.f, 0.f ),glm::vec3(3.f,3.f,3.f));
 		ecs.emplace<ModelComponent>(fVase,srcModel);
-		ecs.emplace<PhysicsComponent>(fVase);
 		physicsSystem->registerPhysicsBody(fVase, new SphereShape(1.f), {}, EActivation::Activate);
 		
 		srcModel = SrcModel::createModelFromFile(srcDevice, "models/smooth_vase.obj");
@@ -152,7 +151,6 @@ namespace src3 {
 		auto floor = ecs.create();
 		ecs.emplace<TransformComponent>(floor,glm::vec3(0.f, .5f, 0.f),glm::vec3(3.f, 1.f, 3.f));
 		ecs.emplace<ModelComponent>(floor,srcModel);
-		ecs.emplace<PhysicsComponent>(floor);
 		{
 			PhysicsComponent phys{};
 			phys.motionType = EMotionType::Static;

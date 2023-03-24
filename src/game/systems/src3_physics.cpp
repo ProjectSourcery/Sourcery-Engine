@@ -1,17 +1,10 @@
 // needs to be before all of the other includes
 #include <Jolt/Jolt.h>
 
-// src3
-#include "game/gameobject/src3_game_object.h"
-
-// entt
-#include "game/ecs/entt.hpp"
-
 // std
 #include <iostream>
 #include <cstdarg>
 #include <thread>
-#include <sstream>
 #include <string>
 
 // jolt
@@ -21,15 +14,16 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
-#include <Jolt/Physics/Collision/ObjectLayer.h>
-#include <Jolt/Physics/Collision/Shape/BoxShape.h>
-#include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/ObjectStream/ObjectStreamTextIn.h>
 #include <Jolt/ObjectStream/ObjectStreamTextOut.h>
-#include <Jolt/ObjectStream/SerializableObject.h>
-#include <Jolt/ObjectStream/TypeDeclarations.h>
+
+// src3
+#include "game/gameobject/src3_game_object.h"
+
+// entt
+#include "game/ecs/entt.hpp"
 
 JPH_SUPPRESS_WARNINGS
 
@@ -58,31 +52,6 @@ static bool assertFailedImpl(const char *inExpr, const char *inMessage, const ch
 #endif // JPH_ENABLE_ASSERTS
 
 namespace src3 {
-    namespace Layers
-    {
-        static constexpr uint8 NON_MOVING = 0;
-        static constexpr uint8 MOVING = 1;
-        static constexpr uint8 NUM_LAYERS = 2;
-    };
-
-    struct PhysicsComponent {
-        BodyID physicsBodyID    = BodyID();
-
-        RVec3 position{};                  // optional to set, if not set, it will use TransformComponent's position
-        Quat rotation = Quat::sIdentity(); // optional to set, if not set, it will use TransformComponent's rotation
-        Vec3 velocity{ 0.f,0.f,0.f };      // optional to set
-
-        EMotionType motionType  = EMotionType::Dynamic; // optional
-        ObjectLayer objectLayer = Layers::MOVING; // optional
-    };
-
-    namespace BroadPhaseLayers
-    {
-        static constexpr BroadPhaseLayer NON_MOVING(0);
-        static constexpr BroadPhaseLayer MOVING(1);
-        static constexpr uint NUM_LAYERS(2);
-    };
-
     // Class that determines if two object layers can collide
     class ObjectLayerPairFilterImpl : public ObjectLayerPairFilter
     {
@@ -202,7 +171,7 @@ namespace src3 {
 
     class SrcPhysicsSystem {
         public:
-            SrcPhysicsSystem(entt::registry &entityComponentSystem) : ecs{entityComponentSystem}
+            explicit SrcPhysicsSystem(entt::registry &entityComponentSystem) : ecs{entityComponentSystem}
             {
                 Trace = traceImpl;
                 JPH_IF_ENABLE_ASSERTS(AssertFailed = assertFailedImpl);
@@ -223,8 +192,9 @@ namespace src3 {
             ~SrcPhysicsSystem()
             {
                 for (auto [entity,phys] : ecs.view<PhysicsComponent>().each()) {
-                    bodyInterface.RemoveBody(phys.physicsBodyID);
-                    bodyInterface.DestroyBody(phys.physicsBodyID);
+                    BodyID bodyid{phys.physicsBodyID};
+                    bodyInterface.RemoveBody(bodyid);
+                    bodyInterface.DestroyBody(bodyid);
                 }
 
                 delete Factory::sInstance;
@@ -233,10 +203,10 @@ namespace src3 {
 
             void update()
             {
-                for (auto [entity,phys,transform] : ecs.group<PhysicsComponent,TransformComponent>().each()) {
-                    if (bodyInterface.IsActive(phys.physicsBodyID)) {
-                        RVec3 pos = bodyInterface.GetCenterOfMassPosition(phys.physicsBodyID);
-                        Quat  rot = bodyInterface.GetRotation(phys.physicsBodyID);
+                for (auto [entity,phys,transform] : ecs.view<PhysicsComponent,TransformComponent>().each()) {
+                    if (BodyID bodyid = BodyID(phys.physicsBodyID); bodyInterface.IsActive(bodyid)) {
+                        RVec3 pos = bodyInterface.GetCenterOfMassPosition(bodyid);
+                        Quat  rot = bodyInterface.GetRotation(bodyid);
 
                         // magic start
 
@@ -252,7 +222,7 @@ namespace src3 {
                 physicsSystem.Update(deltaTime,collisionSteps,integerationSubSteps,&tempAllocator, &jobSystem);
             }
 
-            BodyID registerPhysicsBody(entt::entity entity,Shape *shape,PhysicsComponent options = {}, EActivation activationMode = EActivation::DontActivate) {
+            BodyID registerPhysicsBody(entt::entity entity,Shape *shape,PhysicsComponent options, EActivation activationMode = EActivation::DontActivate) {
                 auto transform = ecs.get<TransformComponent>(entity);
                 RVec3 pos = options.position == RVec3          () ? RVec3(transform.translation.x,transform.translation.y,transform.translation.z) : options.position;
                 Quat  rot = options.rotation == Quat::sIdentity() ? Quat (transform.rotation.x,transform.rotation.y,transform.rotation.z,1)        : options.rotation;
@@ -265,7 +235,7 @@ namespace src3 {
                 };
                 BodyID bodyid = bodyInterface.CreateAndAddBody(bcs,activationMode);
                 bodyInterface.SetLinearVelocity(bodyid,options.velocity);
-                ecs.emplace_or_replace<PhysicsComponent>(entity,bodyid,pos,rot,options.velocity,options.motionType,options.objectLayer);
+                ecs.emplace_or_replace<PhysicsComponent>(entity,bodyid.GetIndexAndSequenceNumber(),pos,rot,options.velocity,options.motionType,options.objectLayer);
                 return bodyid;
             }
 
