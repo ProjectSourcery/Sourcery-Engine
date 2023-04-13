@@ -62,6 +62,7 @@ namespace src3 {
             VkBuffer& buffer,
             VkDeviceMemory& bufferMemory);
         VkCommandBuffer beginSingleTimeCommands();
+        VkCommandBuffer beginSingleTimeCommands(VkCommandPool cmdPool);
         void endSingleTimeCommands(VkCommandBuffer commandBuffer);
         void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
         void copyBufferToImage(
@@ -81,6 +82,8 @@ namespace src3 {
             uint32_t mipLevels = 1,
             uint32_t layerCount = 1);
 
+        void createCommandPool(VkCommandPool *cmdPool);
+
         VkPhysicalDeviceProperties properties;
 
     private:
@@ -89,7 +92,6 @@ namespace src3 {
         void createSurface();
         void pickPhysicalDevice();
         void createLogicalDevice();
-        void createCommandPool();
 
         // helper functions
         bool isDeviceSuitable(VkPhysicalDevice device);
@@ -106,6 +108,7 @@ namespace src3 {
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         SrcWindow& window;
         VkCommandPool commandPool;
+        VkCommandPool viewportCommandPool;
 
         VkDevice device_;
         VkSurfaceKHR surface_;

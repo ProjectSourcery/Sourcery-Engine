@@ -21,6 +21,7 @@ namespace src3 {
 		float getAspectRatio() const { return srcSwapChain->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; };
 		uint32_t getImageCount() const { return srcSwapChain->imageCount(); }
+        SrcSwapChain* getSwapChain() const { return srcSwapChain.get(); }
 
 		VkCommandBuffer getCurrentCommandBuffer() const { 
 			assert(isFrameStarted && "Cannot get command buffer when frame not in progress");
@@ -31,6 +32,8 @@ namespace src3 {
 			assert(isFrameStarted && "Cannot get frame index when frame not in progress");
 			return currentFrameIndex;
 		}
+
+        void createCommandBuffers(std::vector<VkCommandBuffer> *cmdBuffers,VkCommandPool cmdPool);
 
 		VkCommandBuffer beginFrame();
 		void endFrame();

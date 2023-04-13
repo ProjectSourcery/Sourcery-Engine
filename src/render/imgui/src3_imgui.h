@@ -19,12 +19,35 @@
 #include <string>
 #include <cassert>
 
+// TODO: TEMPORARY - remove when editor will be completed
+// sourcery engine imgui / editor definitions
+#define SE_IMGUI_VIEWPORTS
+#define SE_EDITOR
+//
+
 namespace src3 {
   [[maybe_unused]] static void check_vk_result(VkResult err) {
     if (err == 0) return;
     fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
     if (err < 0) abort();
   }
+
+  class SrcEditor{
+  public:
+      SrcEditor(SrcDevice &device, SrcRenderer &renderer);
+
+
+  private:
+      void createRenderPass();
+
+      SrcDevice    &srcDevice;
+      SrcRenderer  &srcRenderer;
+      SrcSwapChain *srcSwapChain;
+
+      VkRenderPass renderPass;
+      VkCommandPool cmdPool;
+      std::vector<VkCommandBuffer> commandBuffers;
+  };
 
   class SrcImGui {
   public:

@@ -43,6 +43,7 @@ namespace src3 {
 		glm::vec3 translation{};
 		glm::vec3 scale{1.f,1.f,1.f};
 		glm::vec3 rotation{};
+        glm::vec3 velocity{};
 
 		glm::mat4 mat4();
 		glm::mat3 normalMatrix();
@@ -75,34 +76,10 @@ namespace src3 {
 	struct PhysicsComponent {
         unsigned int physicsBodyID = BodyID::cInvalidBodyID;
 
-        RVec3 position{};                  // optional to set, if not set, it will use TransformComponent's position
-        Quat rotation = Quat::sIdentity(); // optional to set, if not set, it will use TransformComponent's rotation
-        Vec3 velocity{ 0.f,0.f,0.f };      // optional to set
-
         EMotionType motionType  = EMotionType::Dynamic; // optional
         ObjectLayer objectLayer = Layers::MOVING; // optional
 
         //const std::string fields[6]{"physicsBodyID","position","rotation","velocity","motionType","objectLayer"};
-    };
-
-    class ComponentHashClass {
-    public:
-        inline void addToComponentHashMap(entt::id_type id, std::string componentName) {
-            componentHashMap[id] = std::move(componentName);
-        }
-
-        inline std::map<entt::id_type,std::string> getComponentHashMap(){ // TODO: Make an reflection module or somehow make this delete this (i hate this)
-            if (componentHashMap.empty()) {
-                addToComponentHashMap(entt::type_id<TransformComponent>().hash(),"TransformComponent");
-                addToComponentHashMap(entt::type_id<PointLightComponent>().hash(),"PointLightComponent");
-                addToComponentHashMap(entt::type_id<ColorComponent>().hash(),"ColorComponent");
-                addToComponentHashMap(entt::type_id<ModelComponent>().hash(),"ModelComponent");
-                addToComponentHashMap(entt::type_id<PhysicsComponent>().hash(),"PhysicsComponent");
-            }
-            return componentHashMap;
-        }
-    private:
-        std::map<entt::id_type, std::string> componentHashMap{};
     };
 
 	inline entt::entity makePointLight(

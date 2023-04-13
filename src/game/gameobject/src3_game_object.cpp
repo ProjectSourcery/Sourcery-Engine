@@ -70,6 +70,7 @@ RTTR_REGISTRATION{ // a sacrifice must be made
             .property("translation",&TransformComponent::translation)
             .property("scale",&TransformComponent::scale)
             .property("rotation",&TransformComponent::rotation)
+            .property("velocity",&TransformComponent::velocity)
             .method("mat4",&TransformComponent::mat4)
             .method("normalMatrix",&TransformComponent::normalMatrix);
 
@@ -91,9 +92,6 @@ RTTR_REGISTRATION{ // a sacrifice must be made
     //                      PhysicsComponent
     registration::class_<PhysicsComponent>("PhysicsComponent")
             .property("physicsBodyID",&PhysicsComponent::physicsBodyID)
-            .property("position",&PhysicsComponent::position)
-            .property("rotation",&PhysicsComponent::rotation)
-            .property("velocity",&PhysicsComponent::velocity)
             .property("motionType",&PhysicsComponent::motionType)
             .property("objectLayer",&PhysicsComponent::objectLayer);
 };

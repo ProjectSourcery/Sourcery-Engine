@@ -27,8 +27,13 @@ namespace src3 {
         createSwapChain();
         createImageViews();
         createRenderPass();
+
         createDepthResources();
+        createViewportResources();
+
         createFramebuffers();
+        createViewportFramebuffers();
+
         createSyncObjects();
     }
 
@@ -83,7 +88,7 @@ namespace src3 {
     }
 
     VkResult SrcSwapChain::submitCommandBuffers(
-        const VkCommandBuffer* buffers, uint32_t* imageIndex) {
+        const std::vector<VkCommandBuffer>* buffers, uint32_t* imageIndex) {
         if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
             vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
         }
@@ -98,8 +103,8 @@ namespace src3 {
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.pWaitDstStageMask = waitStages;
 
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = buffers;
+        submitInfo.commandBufferCount = static_cast<uint32_t>(buffers->size());
+        submitInfo.pCommandBuffers = buffers->data();
 
         VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
         submitInfo.signalSemaphoreCount = 1;
@@ -299,6 +304,56 @@ namespace src3 {
         }
     }
 
+    void SrcSwapChain::createFramebuffers(std::vector<VkFramebuffer> *frameBuffers) {
+        frameBuffers->resize(imageCount());
+        for (size_t i = 0; i < imageCount(); i++) {
+            VkImageView attachment[1];
+
+            VkExtent2D swapChainExtent = getSwapChainExtent();
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachment;
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(
+                    device.device(),
+                    &framebufferInfo,
+                    nullptr,
+                    reinterpret_cast<VkFramebuffer *>(&frameBuffers[i])) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }
+    }
+
+    void SrcSwapChain::createViewportFramebuffers() {
+        swapChainViewportFramebuffers.resize(imageCount());
+        for (size_t i = 0; i < imageCount(); i++) {
+            std::array<VkImageView, 2> attachments = { viewportImageViews[i], depthImageViews[i] };
+
+            VkExtent2D swapChainExtent = getSwapChainExtent();
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(
+                    device.device(),
+                    &framebufferInfo,
+                    nullptr,
+                    &swapChainViewportFramebuffers[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }
+    }
+
     void SrcSwapChain::createDepthResources() {
         VkFormat depthFormat = findDepthFormat();
         swapChainDepthFormat = depthFormat;
@@ -336,6 +391,51 @@ namespace src3 {
             viewInfo.image = depthImages[i];
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = depthFormat;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = 0;
+            viewInfo.subresourceRange.layerCount = 1;
+
+            if (vkCreateImageView(device.device(), &viewInfo, nullptr, &depthImageViews[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create texture image view!");
+            }
+        }
+    }
+
+    void SrcSwapChain::createViewportResources() {
+        VkExtent2D swapChainExtent = getSwapChainExtent();
+
+        viewportImages.resize(imageCount());
+        viewportImageMemorys.resize(imageCount());
+        viewportImageViews.resize(imageCount());
+
+        for (long long unsigned int i = 0; i < viewportImages.size(); i++) {
+            VkImageCreateInfo imageInfo{};
+            imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imageInfo.imageType = VK_IMAGE_TYPE_2D;
+            imageInfo.extent.width = swapChainExtent.width;
+            imageInfo.extent.height = swapChainExtent.height;
+            imageInfo.extent.depth = 1;
+            imageInfo.mipLevels = 1;
+            imageInfo.arrayLayers = 1;
+            imageInfo.format = swapChainViewportImageFormat;
+            imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+            imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+
+            device.createImageWithInfo(
+                    imageInfo,
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+                    viewportImages[i],
+                    viewportImageMemorys[i]);
+
+            VkImageViewCreateInfo viewInfo{};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.image = depthImages[i];
+            viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.format = swapChainViewportImageFormat;
             viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
             viewInfo.subresourceRange.baseMipLevel = 0;
             viewInfo.subresourceRange.levelCount = 1;
@@ -386,12 +486,12 @@ namespace src3 {
 
     VkPresentModeKHR SrcSwapChain::chooseSwapPresentMode(
         const std::vector<VkPresentModeKHR>& availablePresentModes) {
-        // for (const auto& availablePresentMode : availablePresentModes) {
-        //     if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-        //         std::cout << "Present mode: Mailbox" << std::endl;
-        //         return availablePresentMode;
-        //     }
-        // }
+         for (const auto& availablePresentMode : availablePresentModes) {
+             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+                 std::cout << "Present mode: Mailbox" << std::endl;
+                 return availablePresentMode;
+             }
+         }
 
         // for (const auto &availablePresentMode : availablePresentModes) {
         //   if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {

@@ -54,12 +54,12 @@ namespace src3 {
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
-        createCommandPool();
+        createCommandPool(&commandPool);
+        createCommandPool(&viewportCommandPool);
     }
 
     SrcDevice::~SrcDevice() {
         vkDestroyCommandPool(device_, commandPool, nullptr);
-        vkDestroyDevice(device_, nullptr);
 
         if (enableValidationLayers) {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
@@ -67,6 +67,7 @@ namespace src3 {
 
         vkDestroySurfaceKHR(instance, surface_, nullptr);
         vkDestroyInstance(instance, nullptr);
+        vkDestroyDevice(device_, nullptr);
     }
 
     void SrcDevice::createInstance() {
@@ -185,7 +186,7 @@ namespace src3 {
         vkGetDeviceQueue(device_, indices.presentFamily, 0, &presentQueue_);
     }
 
-    void SrcDevice::createCommandPool() {
+    void SrcDevice::createCommandPool(VkCommandPool* cmdPool) {
         QueueFamilyIndices queueFamilyIndices = findPhysicalQueueFamilies();
 
         VkCommandPoolCreateInfo poolInfo = {};
@@ -194,7 +195,7 @@ namespace src3 {
         poolInfo.flags =
             VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-        if (vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+        if (vkCreateCommandPool(device_, &poolInfo, nullptr, cmdPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create command pool!");
         }
     }
@@ -439,6 +440,24 @@ namespace src3 {
         }
 
         vkBindBufferMemory(device_, buffer, bufferMemory, 0);
+    }
+
+    VkCommandBuffer SrcDevice::beginSingleTimeCommands(VkCommandPool cmdPool) {
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = cmdPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+        return commandBuffer;
     }
 
     VkCommandBuffer SrcDevice::beginSingleTimeCommands() {

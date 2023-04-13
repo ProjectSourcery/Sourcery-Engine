@@ -38,19 +38,23 @@ namespace src3 {
         VkFormat findDepthFormat();
 
         VkResult acquireNextImage(uint32_t* imageIndex);
-        VkResult submitCommandBuffers(const VkCommandBuffer* buffers, uint32_t* imageIndex);
+        VkResult submitCommandBuffers(const std::vector<VkCommandBuffer>* buffers, uint32_t* imageIndex);
 
         bool compareSwapFormats(const SrcSwapChain& swapChain) const {
             return swapChain.swapChainDepthFormat == swapChainDepthFormat && swapChain.swapChainImageFormat == swapChainImageFormat;
         }
+
+        void createFramebuffers(std::vector<VkFramebuffer> *frameBuffers);
 
     private:
         void init();
         void createSwapChain();
         void createImageViews();
         void createDepthResources();
+        void createViewportResources();
         void createRenderPass();
         void createFramebuffers();
+        void createViewportFramebuffers();
         void createSyncObjects();
 
         // Helper functions
@@ -62,16 +66,26 @@ namespace src3 {
 
         VkFormat swapChainImageFormat;
         VkFormat swapChainDepthFormat;
+        VkFormat swapChainViewportImageFormat = VK_FORMAT_B8G8R8A8_SRGB;
         VkExtent2D swapChainExtent;
 
         std::vector<VkFramebuffer> swapChainFramebuffers;
+        std::vector<VkFramebuffer> swapChainViewportFramebuffers;
+
         VkRenderPass renderPass;
+
 
         std::vector<VkImage> depthImages;
         std::vector<VkDeviceMemory> depthImageMemorys;
         std::vector<VkImageView> depthImageViews;
+
+        std::vector<VkImage> viewportImages;
+        std::vector<VkDeviceMemory> viewportImageMemorys;
+        std::vector<VkImageView> viewportImageViews;
+
         std::vector<VkImage> swapChainImages;
         std::vector<VkImageView> swapChainImageViews;
+
 
         SrcDevice& device;
         VkExtent2D windowExtent;

@@ -51,6 +51,20 @@ namespace src3 {
 		}
 	};
 
+    void SrcRenderer::createCommandBuffers(std::vector<VkCommandBuffer> *cmdBuffers, VkCommandPool cmdPool) {
+        cmdBuffers->resize(SrcSwapChain::MAX_FRAMES_IN_FLIGHT);
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = cmdPool;
+        allocInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffers->size());
+
+        if (vkAllocateCommandBuffers(srcDevice.device(), &allocInfo, cmdBuffers->data()) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate command buffers");
+        }
+    };
+
 	void SrcRenderer::freeCommandBuffers()
 	{
 		vkFreeCommandBuffers(
@@ -96,7 +110,9 @@ namespace src3 {
 			throw std::runtime_error("failed to record command buffer");
 		}
 
-		auto result = srcSwapChain->submitCommandBuffers(&commandBuffer, &currentImageIndex);
+        std::vector<VkCommandBuffer> commandBuffers{commandBuffer};
+
+		auto result = srcSwapChain->submitCommandBuffers(&commandBuffers, &currentImageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || srcWindow.wasWindowResized()) {
 			srcWindow.resetWindowResizedFlag();
 			recreateSwapChain();

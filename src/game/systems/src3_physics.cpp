@@ -224,8 +224,9 @@ namespace src3 {
 
             BodyID registerPhysicsBody(entt::entity entity,Shape *shape,PhysicsComponent options, EActivation activationMode = EActivation::DontActivate) {
                 auto transform = ecs.get<TransformComponent>(entity);
-                RVec3 pos = options.position == RVec3          () ? RVec3(transform.translation.x,transform.translation.y,transform.translation.z) : options.position;
-                Quat  rot = options.rotation == Quat::sIdentity() ? Quat (transform.rotation.x,transform.rotation.y,transform.rotation.z,1)        : options.rotation;
+                RVec3 pos = RVec3(transform.translation.x,transform.translation.y,transform.translation.z);
+                Quat  rot = Quat(transform.rotation.x,transform.rotation.y,transform.rotation.z,1);
+                Vec3  vel = Vec3(transform.velocity.x,transform.velocity.y,transform.velocity.z);
                 BodyCreationSettings bcs{
                     shape, 
                     pos,
@@ -234,8 +235,8 @@ namespace src3 {
                     options.objectLayer
                 };
                 BodyID bodyid = bodyInterface.CreateAndAddBody(bcs,activationMode);
-                bodyInterface.SetLinearVelocity(bodyid,options.velocity);
-                ecs.emplace_or_replace<PhysicsComponent>(entity,bodyid.GetIndexAndSequenceNumber(),pos,rot,options.velocity,options.motionType,options.objectLayer);
+                bodyInterface.SetLinearVelocity(bodyid,vel);
+                ecs.emplace_or_replace<PhysicsComponent>(entity,bodyid.GetIndexAndSequenceNumber(),options.motionType,options.objectLayer);
                 return bodyid;
             }
 
