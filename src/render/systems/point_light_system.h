@@ -13,7 +13,7 @@
 namespace src3 {
 	class PointLightSystem {
 	public:
-		PointLightSystem(SrcDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout );
+		PointLightSystem(SrcDevice& device, VkRenderPass renderPass,VkRenderPass viewportRenderPass, VkDescriptorSetLayout globalSetLayout );
 		~PointLightSystem();
 
 		PointLightSystem(const PointLightSystem&) = delete;
@@ -23,7 +23,7 @@ namespace src3 {
 		void render(FrameInfo& frameInfo);
 	private:
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
-		void createPipeline(VkRenderPass renderPass);
+		void createPipeline(VkRenderPass renderPass,VkRenderPass viewportRenderPass);
 		
 		SrcDevice& srcDevice;
 		std::unique_ptr<SrcSwapChain> srcSwapChain;

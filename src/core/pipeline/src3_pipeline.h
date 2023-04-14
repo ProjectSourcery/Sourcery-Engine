@@ -27,6 +27,7 @@ namespace src3 {
 		VkPipelineDynamicStateCreateInfo dynamicStateInfo;
 		VkPipelineLayout pipelineLayout = nullptr;
 		VkRenderPass renderPass = nullptr;
+        VkRenderPass viewportRenderPass = nullptr;
 		uint32_t subpass = 0;
 	};
 
@@ -38,7 +39,8 @@ namespace src3 {
 		SrcPipeline(const SrcPipeline&) = delete;
 		SrcPipeline operator=(const SrcPipeline) = delete;
 
-		void bind(VkCommandBuffer commandBuffer);
+		void bindGraphics(VkCommandBuffer commandBuffer);
+        void bindViewport(VkCommandBuffer commandBuffer);
 
 		static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 		static void enableAlphaBlending(PipelineConfigInfo& configInfo);
@@ -52,7 +54,6 @@ namespace src3 {
 
 		SrcDevice& srcDevice;
 		VkPipeline graphicsPipeline;
-		VkShaderModule vertShaderModule;
-		VkShaderModule fragShaderModule;
+        VkPipeline viewportPipeline;
 	};
 }

@@ -18,9 +18,9 @@ namespace src3 {
 		glm::mat4 normalMatrix{ 1.f };
 	};
 
-	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, entt::registry &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device}, ents{ecs} {
+	SimpleRenderSystem::SimpleRenderSystem(SrcDevice& device, entt::registry &ecs,VkRenderPass renderPass,VkRenderPass viewportRenderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device}, ents{ecs} {
 		createPipelineLayout(globalSetLayout);
-		createPipeline(renderPass);
+		createPipeline(renderPass,viewportRenderPass);
 	}
 
 	SimpleRenderSystem::~SimpleRenderSystem() {
@@ -56,13 +56,14 @@ namespace src3 {
 		}
 	}
 
-	void SimpleRenderSystem::createPipeline(VkRenderPass renderPass)
+	void SimpleRenderSystem::createPipeline(VkRenderPass renderPass,VkRenderPass viewportRenderPass)
 	{
 		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 		PipelineConfigInfo pipelineConfig{};
 		SrcPipeline::defaultPipelineConfigInfo(pipelineConfig);
 		pipelineConfig.renderPass = renderPass;
+        pipelineConfig.viewportRenderPass = viewportRenderPass;
 		pipelineConfig.pipelineLayout = pipelineLayout;
 		srcPipeline = std::make_unique<SrcPipeline>(
 			srcDevice,
@@ -74,7 +75,8 @@ namespace src3 {
 
 	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
-		srcPipeline->bind(frameInfo.commandBuffer);
+        srcPipeline->bindGraphics(frameInfo.commandBuffer);
+		srcPipeline->bindViewport(frameInfo.viewportCommandBuffer);
 
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
@@ -128,9 +130,9 @@ namespace src3 {
 			push.modelMatrix = transform.mat4();
 			push.normalMatrix = transform.normalMatrix();
 
-			vkCmdPushConstants(frameInfo.commandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
-			model.model->bind(frameInfo.commandBuffer);
-			model.model->draw(frameInfo.commandBuffer);
+			vkCmdPushConstants(frameInfo.viewportCommandBuffer, pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(SimplePushConstantData), &push);
+			model.model->bind(frameInfo.viewportCommandBuffer);
+			model.model->draw(frameInfo.viewportCommandBuffer);
 
 			index += 1;
 		}

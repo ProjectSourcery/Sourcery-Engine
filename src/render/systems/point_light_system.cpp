@@ -19,9 +19,9 @@ namespace src3 {
 		float radius;
 	};
 
-	PointLightSystem::PointLightSystem(SrcDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device} {
+	PointLightSystem::PointLightSystem(SrcDevice& device, VkRenderPass renderPass,VkRenderPass viewportRenderPass, VkDescriptorSetLayout globalSetLayout) : srcDevice{device} {
 		createPipelineLayout(globalSetLayout);
-		createPipeline(renderPass);
+		createPipeline(renderPass,viewportRenderPass);
 	}
 
 	PointLightSystem::~PointLightSystem() {
@@ -49,7 +49,7 @@ namespace src3 {
 		}
 	}
 
-	void PointLightSystem::createPipeline(VkRenderPass renderPass)
+	void PointLightSystem::createPipeline(VkRenderPass renderPass,VkRenderPass viewportRenderPass)
 	{
 		assert(pipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
@@ -59,6 +59,7 @@ namespace src3 {
 		pipelineConfig.attributeDescriptions.clear();
 		pipelineConfig.bindingDescriptors.clear();
 		pipelineConfig.renderPass = renderPass;
+        pipelineConfig.viewportRenderPass = viewportRenderPass;
 		pipelineConfig.pipelineLayout = pipelineLayout;
 		srcPipeline = std::make_unique<SrcPipeline>(
 			srcDevice,
@@ -96,7 +97,8 @@ namespace src3 {
 			sorted[disSquared] = lightId;
 		}
 
-		srcPipeline->bind(frameInfo.commandBuffer);
+		srcPipeline->bindGraphics(frameInfo.commandBuffer);
+        srcPipeline->bindViewport(frameInfo.viewportCommandBuffer);
 
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 

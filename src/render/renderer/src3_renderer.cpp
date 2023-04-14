@@ -9,6 +9,7 @@ namespace src3 {
 	SrcRenderer::SrcRenderer(SrcWindow& window, SrcDevice& device) : srcWindow{ window }, srcDevice{device} {
 		recreateSwapChain();
 		createCommandBuffers();
+        createCommandBuffers(&viewportCommandBuffers,device.getViewportCommandPool());
 	}
 
 	SrcRenderer::~SrcRenderer() {freeCommandBuffers();}
@@ -92,27 +93,20 @@ namespace src3 {
 
 		auto commandBuffer = getCurrentCommandBuffer();
 
-		VkCommandBufferBeginInfo beginInfo{};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		//beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-			throw std::runtime_error("failed to begin recording the command buffer");
-		}
+        beginCommandBuffer(commandBuffer);
 		return commandBuffer;
 	}
 
 	void SrcRenderer::endFrame()
 	{
 		assert(isFrameStarted && "Can't call endFrame while frame is not in progress");
-		auto commandBuffer = getCurrentCommandBuffer();
-		if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to record command buffer");
-		}
+        for (const auto &buffer: submitingBuffers) {
+            if (vkEndCommandBuffer(buffer) != VK_SUCCESS) {
+                throw std::runtime_error("failed to record command buffer");
+            }
+        }
 
-        std::vector<VkCommandBuffer> commandBuffers{commandBuffer};
-
-		auto result = srcSwapChain->submitCommandBuffers(&commandBuffers, &currentImageIndex);
+		auto result = srcSwapChain->submitCommandBuffers(&submitingBuffers, &currentImageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || srcWindow.wasWindowResized()) {
 			srcWindow.resetWindowResizedFlag();
 			recreateSwapChain();
@@ -122,7 +116,22 @@ namespace src3 {
 
 		isFrameStarted = false;
 		currentFrameIndex = (currentFrameIndex + 1) % SrcSwapChain::MAX_FRAMES_IN_FLIGHT;
+        submitingBuffers.clear();
 	}
+
+    VkCommandBuffer SrcRenderer::beginCommandBuffer(VkCommandBuffer commandBuffer,VkBufferUsageFlagBits usageFlagBits) {
+        if (std::find(submitingBuffers.begin(), submitingBuffers.end(),commandBuffer) == std::end(submitingBuffers))
+            submitingBuffers.push_back(commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = usageFlagBits;
+
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording the command buffer");
+        }
+        return commandBuffer;
+    }
 
 	void SrcRenderer::beginSwapChainRenderPass(VkCommandBuffer commandBuffer)
 	{

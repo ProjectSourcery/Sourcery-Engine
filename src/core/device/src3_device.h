@@ -41,6 +41,7 @@ namespace src3 {
         SrcDevice& operator=(SrcDevice&&) = delete;
 
         VkCommandPool getCommandPool() { return commandPool; }
+        VkCommandPool getViewportCommandPool() { return viewportCommandPool; }
         VkDevice device() { return device_; }
         VkSurfaceKHR surface() { return surface_; }
         VkQueue graphicsQueue() { return graphicsQueue_; }

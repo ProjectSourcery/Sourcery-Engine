@@ -62,8 +62,8 @@ namespace src3 {
 
 		// render systems
 		SrcImGui imGui{srcDevice,srcWindow,srcRenderer,ecs};
-		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
-		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),globalSetLayout->getDescriptorSetLayout()};
+		SimpleRenderSystem simpleRenderSystem{srcDevice,ecs, srcRenderer.getSwapChainRenderPass(),srcRenderer.getViewportRenderPass(),globalSetLayout->getDescriptorSetLayout()};
+		PointLightSystem pointLightSystem{srcDevice, srcRenderer.getSwapChainRenderPass(),srcRenderer.getViewportRenderPass(),globalSetLayout->getDescriptorSetLayout()};
 
 		// game systems
 		
@@ -94,12 +94,15 @@ namespace src3 {
 			physicsSystem->update();
 
 			if (auto commandBuffer = srcRenderer.beginFrame()) {
+                auto viewportCmdBuffer = srcRenderer.beginCommandBuffer(srcRenderer.getCurrentViewportCommandBuffer());
+
 				int frameIndex = srcRenderer.getFrameIndex();
 				framePools[frameIndex]->resetPool();
 				FrameInfo frameInfo{
 					frameIndex,
 					frameTime,
-					commandBuffer,camera,
+                    commandBuffer,viewportCmdBuffer,
+                    camera,
 					globalDescriptorSets[frameIndex],
 					*framePools[frameIndex],
 					ecs

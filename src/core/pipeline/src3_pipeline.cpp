@@ -18,8 +18,6 @@ namespace src3 {
 	}
 
 	SrcPipeline::~SrcPipeline() {
-		vkDestroyShaderModule(srcDevice.device(), vertShaderModule, nullptr);
-		vkDestroyShaderModule(srcDevice.device(), fragShaderModule, nullptr);
 		vkDestroyPipeline(srcDevice.device(), graphicsPipeline, nullptr);
 	}
 
@@ -41,10 +39,14 @@ namespace src3 {
 
 	void SrcPipeline::createGraphicsPipeline(const std::string& vertFilepath, const std::string& fragFilepath, const PipelineConfigInfo& configInfo) {
 		assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create graphics pipeline: no pipelineLayout provided in configInfo");
-		assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create graphics pipeline: no renderPass provided in configInfo");
+		assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline: no renderPass provided in configInfo");
+        assert(configInfo.viewportRenderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline: no viewportRenderPass provided in configInfo");
 
 		auto vertCode = readFile(vertFilepath);
 		auto fragCode = readFile(fragFilepath);
+
+        VkShaderModule vertShaderModule;
+        VkShaderModule fragShaderModule;
 
 		createShaderModule(vertCode, &vertShaderModule);
 		createShaderModule(fragCode, &fragShaderModule);
@@ -98,6 +100,14 @@ namespace src3 {
 		if (vkCreateGraphicsPipelines(srcDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create graphics pipeline");
 		}
+
+        pipelineInfo.renderPass = configInfo.viewportRenderPass;
+        if (vkCreateGraphicsPipelines(srcDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &viewportPipeline) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create graphics pipeline");
+        }
+
+        vkDestroyShaderModule(srcDevice.device(), vertShaderModule, nullptr);
+        vkDestroyShaderModule(srcDevice.device(), fragShaderModule, nullptr);
 	}
 
 	void SrcPipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule)
@@ -112,10 +122,14 @@ namespace src3 {
 		}
 	}
 
-	void SrcPipeline::bind(VkCommandBuffer commandBuffer)
+	void SrcPipeline::bindGraphics(VkCommandBuffer commandBuffer)
 	{
 		vkCmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,graphicsPipeline);
 	}
+
+    void SrcPipeline::bindViewport(VkCommandBuffer commandBuffer) {
+        vkCmdBindPipeline(commandBuffer,VK_PIPELINE_BIND_POINT_GRAPHICS,viewportPipeline);
+    }
 
 	void SrcPipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
 		configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

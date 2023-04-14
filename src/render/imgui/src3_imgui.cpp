@@ -268,11 +268,20 @@ namespace src3 {
         info.PipelineCache = VK_NULL_HANDLE;
         info.Allocator = VK_NULL_HANDLE;
 
+#ifdef SE_EDITOR
+        SrcEditor editor{device,renderer};
+        ImGui_ImplVulkan_Init(&info,editor.getRenderPass());
+
+        VkCommandBuffer commandBuffer = srcDevice.beginSingleTimeCommands(editor.getCommandPool());
+        ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+        srcDevice.endSingleTimeCommands(commandBuffer);
+#else
         ImGui_ImplVulkan_Init(&info, renderer.getSwapChainRenderPass());
 
         VkCommandBuffer commandBuffer = srcDevice.beginSingleTimeCommands();
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
         srcDevice.endSingleTimeCommands(commandBuffer);
+#endif
 
         vkDeviceWaitIdle(srcDevice.device());
         ImGui_ImplVulkan_DestroyFontUploadObjects();
@@ -310,7 +319,7 @@ namespace src3 {
         createRenderPass();
         srcDevice.createCommandPool(&cmdPool);
         srcRenderer.createCommandBuffers(&commandBuffers,cmdPool);
-
+        createFrameBuffers();
     }
 
     void SrcEditor::createRenderPass() {
@@ -352,6 +361,31 @@ namespace src3 {
 
         if (vkCreateRenderPass(srcDevice.device(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
             throw std::runtime_error("failed to create render pass!");
+        }
+    }
+
+    void SrcEditor::createFrameBuffers() {
+        frameBuffers.resize(imguiImageViews.size());
+        for (size_t i = 0; i < imguiImageViews.size(); i++) {
+            VkImageView attachment[1];
+
+            VkExtent2D swapChainExtent = srcSwapChain->getSwapChainExtent();
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachment;
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(
+                    srcDevice.device(),
+                    &framebufferInfo,
+                    nullptr,
+                    &frameBuffers[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
         }
     }
 }

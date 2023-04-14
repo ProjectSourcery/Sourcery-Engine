@@ -27,7 +27,8 @@ namespace src3 {
 	struct FrameInfo {
 		int frameIndex;
 		float frameTime;
-		VkCommandBuffer commandBuffer;
+        VkCommandBuffer commandBuffer;
+		VkCommandBuffer viewportCommandBuffer;
 		SrcCamera& camera; 
 		VkDescriptorSet globalDescriptorSet;
 		SrcDescriptorPool &frameDescriptorPool;

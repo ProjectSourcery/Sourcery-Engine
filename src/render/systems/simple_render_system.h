@@ -25,7 +25,7 @@ namespace src3 {
 
 	class SimpleRenderSystem {
 	public:
-		SimpleRenderSystem(SrcDevice& device, entt::registry &ecs,VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout );
+		SimpleRenderSystem(SrcDevice& device, entt::registry &ecs,VkRenderPass renderPass,VkRenderPass viewportRenderPass, VkDescriptorSetLayout globalSetLayout );
 		~SimpleRenderSystem();
 
 		SimpleRenderSystem(const SimpleRenderSystem&) = delete;
@@ -38,7 +38,7 @@ namespace src3 {
 		std::unique_ptr<SrcPipeline> srcPipeline;
 	private:
 		void createPipelineLayout(VkDescriptorSetLayout globalSetLayout);
-		void createPipeline(VkRenderPass renderPass);
+		void createPipeline(VkRenderPass renderPass,VkRenderPass viewportRenderPass);
 		
 		SrcDevice& srcDevice;
 		SrcUbo<TransformUboData> transformUbo{srcDevice, 1000, false, true};

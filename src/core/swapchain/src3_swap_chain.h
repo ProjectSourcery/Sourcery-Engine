@@ -25,6 +25,7 @@ namespace src3 {
 
         VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
         VkRenderPass getRenderPass() { return renderPass; }
+        VkRenderPass getViewportRenderPass() const { return viewportRenderPass; }
         VkImageView getImageView(int index) { return swapChainImageViews[index]; }
         size_t imageCount() { return swapChainImages.size(); }
         VkFormat getSwapChainImageFormat() { return swapChainImageFormat; }
@@ -44,8 +45,6 @@ namespace src3 {
             return swapChain.swapChainDepthFormat == swapChainDepthFormat && swapChain.swapChainImageFormat == swapChainImageFormat;
         }
 
-        void createFramebuffers(std::vector<VkFramebuffer> *frameBuffers);
-
     private:
         void init();
         void createSwapChain();
@@ -53,6 +52,7 @@ namespace src3 {
         void createDepthResources();
         void createViewportResources();
         void createRenderPass();
+        void createViewportRenderPass();
         void createFramebuffers();
         void createViewportFramebuffers();
         void createSyncObjects();
@@ -73,6 +73,7 @@ namespace src3 {
         std::vector<VkFramebuffer> swapChainViewportFramebuffers;
 
         VkRenderPass renderPass;
+        VkRenderPass viewportRenderPass;
 
 
         std::vector<VkImage> depthImages;

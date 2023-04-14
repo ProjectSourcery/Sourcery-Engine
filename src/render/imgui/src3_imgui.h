@@ -36,9 +36,11 @@ namespace src3 {
   public:
       SrcEditor(SrcDevice &device, SrcRenderer &renderer);
 
-
+      VkRenderPass getRenderPass() const { return renderPass; };
+      VkCommandPool getCommandPool() const { return cmdPool; };
   private:
       void createRenderPass();
+      void createFrameBuffers();
 
       SrcDevice    &srcDevice;
       SrcRenderer  &srcRenderer;
@@ -47,6 +49,11 @@ namespace src3 {
       VkRenderPass renderPass;
       VkCommandPool cmdPool;
       std::vector<VkCommandBuffer> commandBuffers;
+      std::vector<VkFramebuffer> frameBuffers;
+
+      std::vector<VkImage> imguiImages;
+      std::vector<VkDeviceMemory> imguiImageMemorys;
+      std::vector<VkImageView> imguiImageViews;
   };
 
   class SrcImGui {

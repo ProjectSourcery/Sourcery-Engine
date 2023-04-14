@@ -18,6 +18,7 @@ namespace src3 {
 		SrcRenderer& operator=(const SrcRenderer&) = delete;
 
 		VkRenderPass getSwapChainRenderPass() const { return srcSwapChain->getRenderPass(); }
+        VkRenderPass getViewportRenderPass() const { return srcSwapChain->getViewportRenderPass(); }
 		float getAspectRatio() const { return srcSwapChain->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; };
 		uint32_t getImageCount() const { return srcSwapChain->imageCount(); }
@@ -28,6 +29,11 @@ namespace src3 {
 			return commandBuffers[currentFrameIndex]; 
 		}
 
+        VkCommandBuffer getCurrentViewportCommandBuffer() const {
+            assert(isFrameStarted && "Cannot get command buffer when frame not in progress");
+            return viewportCommandBuffers[currentFrameIndex];
+        }
+
 		int getFrameIndex() const {
 			assert(isFrameStarted && "Cannot get frame index when frame not in progress");
 			return currentFrameIndex;
@@ -37,6 +43,9 @@ namespace src3 {
 
 		VkCommandBuffer beginFrame();
 		void endFrame();
+
+        VkCommandBuffer beginCommandBuffer(VkCommandBuffer commandBuffer,VkBufferUsageFlagBits usageFlagBits = (VkBufferUsageFlagBits)0);
+
 		void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
 		void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
@@ -49,6 +58,9 @@ namespace src3 {
 		SrcDevice& srcDevice;
 		std::unique_ptr<SrcSwapChain> srcSwapChain;
 		std::vector<VkCommandBuffer> commandBuffers;
+        std::vector<VkCommandBuffer> viewportCommandBuffers;
+
+        std::vector<VkCommandBuffer> submitingBuffers;
 
 		uint32_t currentImageIndex;
 		int currentFrameIndex{0};
