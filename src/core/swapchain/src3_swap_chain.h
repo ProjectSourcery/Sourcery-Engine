@@ -24,6 +24,7 @@ namespace src3 {
         SrcSwapChain operator=(const SrcSwapChain&) = delete;
 
         VkFramebuffer getFrameBuffer(int index) { return swapChainFramebuffers[index]; }
+        VkFramebuffer getViewportFrameBuffer(int index) { return swapChainViewportFramebuffers[index]; }
         VkRenderPass getRenderPass() { return renderPass; }
         VkRenderPass getViewportRenderPass() const { return viewportRenderPass; }
         VkImageView getImageView(int index) { return swapChainImageViews[index]; }
@@ -32,6 +33,8 @@ namespace src3 {
         VkExtent2D getSwapChainExtent() { return swapChainExtent; }
         uint32_t width() { return swapChainExtent.width; }
         uint32_t height() { return swapChainExtent.height; }
+
+        std::vector<VkImageView> getViewportImageViews() const { return viewportImageViews; }
 
         float extentAspectRatio() {
             return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);

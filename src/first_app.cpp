@@ -6,7 +6,7 @@
 #include "core/buffer/uniform/src3_ubo.h"
 #include "render/systems/simple_render_system.h"
 #include "render/systems/point_light_system.h"
-#include "render/imgui/src3_imgui.h"
+#include "render/imgui/src3_imgui.cpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -121,13 +121,22 @@ namespace src3 {
 
 				srcRenderer.beginSwapChainRenderPass(commandBuffer);
 
+                {
+                    std::vector<VkClearValue> clearValues;
+                    clearValues[0].color = {{0.01f, 0.1f, 0.1f, 1.0f}};
+                    clearValues[1].depthStencil = {1.0f, 0};
+                    srcRenderer.beginRenderPass(viewportCmdBuffer, srcRenderer.getViewportRenderPass(),
+                                                srcRenderer.getSwapChain()->getViewportFrameBuffer(frameIndex),clearValues);
+                }
+
 				simpleRenderSystem.renderGameObjects(frameInfo);
 				pointLightSystem.render(frameInfo);
 
 				imGui.run();
 
 				imGui.render(commandBuffer);
-				
+
+                srcRenderer.endRenderPass(viewportCmdBuffer);
 				srcRenderer.endSwapChainRenderPass(commandBuffer);
 				srcRenderer.endFrame();
 			}

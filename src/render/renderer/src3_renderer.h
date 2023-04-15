@@ -49,6 +49,9 @@ namespace src3 {
 		void beginSwapChainRenderPass(VkCommandBuffer commandBuffer);
 		void endSwapChainRenderPass(VkCommandBuffer commandBuffer);
 
+        void beginRenderPass(VkCommandBuffer commandBuffer, VkRenderPass rendPass, VkFramebuffer framebuffer, std::vector<VkClearValue> clearValues);
+        void endRenderPass(VkCommandBuffer commandBuffer);
+
 	private:
 		void createCommandBuffers();
 		void freeCommandBuffers();

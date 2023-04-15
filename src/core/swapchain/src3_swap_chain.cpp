@@ -322,7 +322,7 @@ namespace src3 {
         dependency.srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
         dependency.dstSubpass = 0;
         dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
         dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
         VkSubpassDependency dependency2 = {};
@@ -331,7 +331,7 @@ namespace src3 {
         dependency2.srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
         dependency2.dstSubpass = VK_SUBPASS_EXTERNAL;
         dependency2.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency2.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        dependency2.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
         dependency2.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
         std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
@@ -479,16 +479,16 @@ namespace src3 {
 
             VkImageViewCreateInfo viewInfo{};
             viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            viewInfo.image = depthImages[i];
+            viewInfo.image = viewportImages[i];
             viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
             viewInfo.format = swapChainViewportImageFormat;
-            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             viewInfo.subresourceRange.baseMipLevel = 0;
             viewInfo.subresourceRange.levelCount = 1;
             viewInfo.subresourceRange.baseArrayLayer = 0;
             viewInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(device.device(), &viewInfo, nullptr, &depthImageViews[i]) != VK_SUCCESS) {
+            if (vkCreateImageView(device.device(), &viewInfo, nullptr, &viewportImageViews[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create texture image view!");
             }
         }
