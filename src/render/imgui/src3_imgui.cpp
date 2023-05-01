@@ -10,10 +10,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
-#define IMGUI_IMPLEMENTATION
-#include <imgui/misc/single_file/imgui_single_file.h>
-#include <imgui/backends/imgui_impl_vulkan.h>
-#include <imgui/backends/imgui_impl_glfw.h>
+#include "render/imgui/core/imgui.h"
+#include "render/imgui/core/imgui_internal.h"
+#include "render/imgui/core/backends/imgui_impl_vulkan.h"
+#include "render/imgui/core/backends/imgui_impl_glfw.h"
 
 // std
 #include <memory>
@@ -37,6 +37,15 @@ namespace src3 {
     }
 
     namespace imgui {
+        struct SeImVec2 : ImVec2 {
+            SeImVec2(float d, float d1) : ImVec2(d, d1) {}
+            explicit SeImVec2(ImVec2 vec) : ImVec2(vec) {}
+
+            SeImVec2 operator * (float a) { return {this->x * a, this->y * a}; }
+            SeImVec2 operator + (SeImVec2 vec) { return {this->x + vec.x, this->y + vec.y}; }
+            SeImVec2 operator - (SeImVec2 vec) { return {this->x - vec.x, this->y - vec.y}; }
+        };
+
         // thanks to https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353 for this :)
 
         static ImVector<ImRect> s_GroupPanelLabelStack;
@@ -114,15 +123,15 @@ namespace src3 {
 
             ImGui::EndGroup();
 
-            auto itemMin = ImGui::GetItemRectMin();
-            auto itemMax = ImGui::GetItemRectMax();
+            auto itemMin = SeImVec2(ImGui::GetItemRectMin());
+            auto itemMax = SeImVec2(ImGui::GetItemRectMax());
             //ImGui::GetWindowDrawList()->AddRectFilled(itemMin, itemMax, IM_COL32(255, 0, 0, 64), 4.0f);
 
             auto labelRect = s_GroupPanelLabelStack.back();
             s_GroupPanelLabelStack.pop_back();
 
-            ImVec2 halfFrame = ImVec2(frameHeight * 0.25f, frameHeight) * 0.5f;
-            ImRect frameRect = ImRect(itemMin + halfFrame, itemMax - ImVec2(halfFrame.x, 0.0f));
+            SeImVec2 halfFrame = SeImVec2(frameHeight * 0.25f, frameHeight) * 0.5f;
+            ImRect frameRect = ImRect(itemMin + halfFrame, itemMax - SeImVec2(halfFrame.x, 0.0f));
             labelRect.Min.x -= itemSpacing.x;
             labelRect.Max.x += itemSpacing.x;
             for (int i = 0; i < 4; ++i)
@@ -254,7 +263,9 @@ namespace src3 {
             srcRenderer.createCommandBuffers(&commandBuffers,cmdPool);
             createFrameBuffers();
             createTextureSampler();
+        }
 
+        void init() {
             std::vector<VkImageView> viewportImageViews = srcSwapChain->getViewportImageViews();
             descriptorSets.resize(viewportImageViews.size());
             for (unsigned int i = 0; i < viewportImageViews.size(); i++) {
@@ -262,18 +273,18 @@ namespace src3 {
             }
         }
 
-        VkRenderPass getRenderPass() const { return renderPass; };
-        VkCommandPool getCommandPool() const { return cmdPool; };
-        std::vector<VkDescriptorSet> getDescriptorSets() const { return descriptorSets; };
-        VkCommandBuffer getCurrentCommandBuffer() const {
+        [[nodiscard]] inline VkRenderPass getRenderPass() const { return renderPass; };
+        [[nodiscard]] inline VkCommandPool getCommandPool() const { return cmdPool; };
+        [[nodiscard]] inline std::vector<VkDescriptorSet> getDescriptorSets() const { return descriptorSets; };
+        [[nodiscard]] inline VkCommandBuffer getCurrentCommandBuffer() const {
             return commandBuffers[getFrameIndex()];
         }
 
-        VkFramebuffer getCurrentFrameBuffer() const {
+        [[nodiscard]] inline VkFramebuffer getCurrentFrameBuffer() const {
             return frameBuffers[getFrameIndex()];
         }
 
-        int getFrameIndex() const {
+        [[nodiscard]] inline int getFrameIndex() const {
             return srcRenderer.getFrameIndex();
         }
 
@@ -286,7 +297,7 @@ namespace src3 {
             colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-            colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
             VkAttachmentReference colorAttachmentRef = {};
@@ -321,8 +332,8 @@ namespace src3 {
         }
 
         inline void createFrameBuffers(){
-            frameBuffers.resize(imguiImageViews.size());
-            for (size_t i = 0; i < imguiImageViews.size(); i++) {
+            frameBuffers.resize(srcSwapChain->getSwapchainImageViews().size());
+            for (size_t i = 0; i < srcSwapChain->getSwapchainImageViews().size(); i++) {
                 VkImageView attachment[1];
 
                 VkExtent2D swapChainExtent = srcSwapChain->getSwapChainExtent();
@@ -335,6 +346,7 @@ namespace src3 {
                 framebufferInfo.height = swapChainExtent.height;
                 framebufferInfo.layers = 1;
 
+                attachment[0] = srcSwapChain->getImageView(i);
                 if (vkCreateFramebuffer(
                         srcDevice.device(),
                         &framebufferInfo,
@@ -384,6 +396,8 @@ namespace src3 {
         std::vector<VkFramebuffer> frameBuffers;
         std::vector<VkDescriptorSet> descriptorSets;
         VkSampler texSampler;
+
+        VkFormat imgFormat = VK_FORMAT_B8G8R8A8_SRGB;
 
         std::vector<VkImage> imguiImages;
         std::vector<VkDeviceMemory> imguiImageMemorys;
@@ -446,6 +460,8 @@ namespace src3 {
             VkCommandBuffer commandBuffer = srcDevice.beginSingleTimeCommands(editor.getCommandPool());
             ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
             srcDevice.endSingleTimeCommands(commandBuffer);
+
+            editor.init();
 #else
             ImGui_ImplVulkan_Init(&info, renderer.getSwapChainRenderPass());
 
@@ -499,6 +515,7 @@ namespace src3 {
             auto cmdBuffer = srcRenderer.beginCommandBuffer(editor.getCurrentCommandBuffer());
             {
                 std::vector<VkClearValue> clearValues;
+                clearValues.resize(1);
                 clearValues[0].color = { {0.01f,0.1f,0.1f,1.0f} };
                 srcRenderer.beginRenderPass(cmdBuffer,editor.getRenderPass(),editor.getCurrentFrameBuffer(),clearValues);
             }
@@ -517,7 +534,7 @@ namespace src3 {
         SrcRenderer &srcRenderer;
         std::unique_ptr<SrcDescriptorPool> descriptorPool;
         entt::registry &ecs;
-        ImGuiContext *im_context;
+        [[maybe_unused]] ImGuiContext *im_context;
 #ifdef SE_EDITOR
         SrcEditor editor;
 #endif

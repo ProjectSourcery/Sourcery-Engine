@@ -97,10 +97,9 @@ namespace src3 {
 			sorted[disSquared] = lightId;
 		}
 
-		srcPipeline->bindGraphics(frameInfo.commandBuffer);
         srcPipeline->bindViewport(frameInfo.viewportCommandBuffer);
 
-		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
+		vkCmdBindDescriptorSets(frameInfo.viewportCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
 
 		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it) {
 			auto lightId = it->second;
@@ -114,13 +113,13 @@ namespace src3 {
 			push.radius = lightTransform.scale.x;
 
 			vkCmdPushConstants(
-				frameInfo.commandBuffer,
+				frameInfo.viewportCommandBuffer,
 				pipelineLayout,
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 				0,
 				sizeof(PointLightPushConstants),
 				&push);
-			vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+			vkCmdDraw(frameInfo.viewportCommandBuffer, 6, 1, 0, 0);
 		}
 	}
 }

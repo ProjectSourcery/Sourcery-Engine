@@ -35,6 +35,7 @@ namespace src3 {
         uint32_t height() { return swapChainExtent.height; }
 
         std::vector<VkImageView> getViewportImageViews() const { return viewportImageViews; }
+        std::vector<VkImageView> getSwapchainImageViews() const { return swapChainImageViews; }
 
         float extentAspectRatio() {
             return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);

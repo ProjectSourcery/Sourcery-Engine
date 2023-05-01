@@ -75,7 +75,6 @@ namespace src3 {
 
 	void SimpleRenderSystem::renderGameObjects(FrameInfo& frameInfo)
 	{
-        srcPipeline->bindGraphics(frameInfo.commandBuffer);
 		srcPipeline->bindViewport(frameInfo.viewportCommandBuffer);
 
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &frameInfo.globalDescriptorSet, 0, nullptr);
@@ -116,15 +115,15 @@ namespace src3 {
 				.writeBuffer(0, &bufferInfo)
 				.writeImage(1,&imageInfo) // TODO: Fix this
 				.build(transformDescriptorSet);
-			vkCmdBindDescriptorSets(
-				frameInfo.commandBuffer,
-				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				pipelineLayout,
-				1,  // starting set (0 is the globalDescriptorSet, 1 is the set specific to this system)
-				1,  // binding 1 more set
-				&transformDescriptorSet,
-				0,
-				nullptr);
+            vkCmdBindDescriptorSets(
+                    frameInfo.viewportCommandBuffer,
+                    VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout,
+                    1,  // starting set (0 is the globalDescriptorSet, 1 is the set specific to this system)
+                    1,  // binding 1 more set
+                    &transformDescriptorSet,
+                    0,
+                    nullptr);
 
 			SimplePushConstantData push{};
 			push.modelMatrix = transform.mat4();

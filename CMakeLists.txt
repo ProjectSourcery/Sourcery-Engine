@@ -72,12 +72,6 @@ if (NOT STB_PATH)
     set(STB_PATH external/stb)
 endif()
 
-# If IMGUI_PATH not specified in .env.cmake, try fetching from git repo
-if (NOT IMGUI_PATH)
-    message(STATUS "IMGUI_PATH not specified in .env.cmake, using external/imgui")
-    set(IMGUI_PATH external/imgui)
-endif()
-
 # If RTTR_PATH not specified in .env.cmake, try fetching from git repo
 if (NOT RTTR_PATH)
     message(STATUS "RTTR_PATH not specified in .env.cmake, using external/rttr")
@@ -223,6 +217,7 @@ if (WIN32)
             ${PROJECT_SOURCE_DIR}/src
             ${Vulkan_INCLUDE_DIRS}
             ${TINYOBJ_PATH}
+            ${STB_PATH}
             ${GLFW_INCLUDE_DIRS}
             ${GLM_PATH}
             ${JoltPhysics_SOURCE_DIR}/..
